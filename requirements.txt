@@ -1,0 +1,9 @@
+pandas 
+scikit-learn
+numpy 
+ollama 
+matplotlib 
+sentence-transformers
+networkx
+openai 
+python-dotenv
