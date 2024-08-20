@@ -1,0 +1,42 @@
+Role: agent
+  Average words per conversation: 10.06
+  Maximum words per conversation: 55
+  Minimum words per conversation: 1
+  Median words per conversation: 9.00
+  Variance of words per conversation: 42.00
+  Standard deviation of words per conversation: 6.48
+  Average characters per conversation: 50.83
+  Maximum characters per conversation: 250
+  Minimum characters per conversation: 2
+  Median characters per conversation: 43.00
+  Variance of characters per conversation: 1183.88
+  Standard deviation of characters per conversation: 34.41
+
+Role: customer
+  Average words per conversation: 6.17
+  Maximum words per conversation: 53
+  Minimum words per conversation: 1
+  Median words per conversation: 4.00
+  Variance of words per conversation: 34.57
+  Standard deviation of words per conversation: 5.88
+  Average characters per conversation: 31.54
+  Maximum characters per conversation: 250
+  Minimum characters per conversation: 1
+  Median characters per conversation: 22.00
+  Variance of characters per conversation: 846.88
+  Standard deviation of characters per conversation: 29.10
+
+Role: action
+  Average words per conversation: 6.57
+  Maximum words per conversation: 48
+  Minimum words per conversation: 4
+  Median words per conversation: 7.00
+  Variance of words per conversation: 2.93
+  Standard deviation of words per conversation: 1.71
+  Average characters per conversation: 39.09
+  Maximum characters per conversation: 248
+  Minimum characters per conversation: 20
+  Median characters per conversation: 37.00
+  Variance of characters per conversation: 81.55
+  Standard deviation of characters per conversation: 9.03
+
