@@ -1,0 +1,21 @@
+# Ignore all .json files
+*.json
+
+# Ignore node_modules folder
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore Python compiled files
+__pycache__/
+*.py[cod]
+
+# Ignore environment variables
+.env
+
+# Ignore system-specific files
+.DS_Store
+
+#virtual environment 
+/venv/
