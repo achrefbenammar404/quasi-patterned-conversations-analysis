@@ -1,2 +1,4 @@
-# quasi-patterned-conversations-analysis
-This repository contains code and resources for the paper "Linguistic Insights from Quasi-Patterned Sets Of Conversations: A Computational Approach to Conversational Graphs." It develops a framework to construct graphs capturing patterns in quasi-patterned sets of dialogues.
+# Quasi-Patterned Conversations Analysis
+
+This repository contains the source code and related resources for the research paper titled "Linguistic Insights from Quasi-Patterned Set Of Conversations: A Computational Approach to Conversational Graphs." The project focuses on developing a computational framework for constructing readable conversational graphs that capture the underlying patterns in quasi-patterned dialogue datasets. These graphs are designed to model intents as nodes and transitions as edges, enabling better analysis and understanding of conversation dynamics.
+
