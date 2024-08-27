@@ -11,7 +11,7 @@ from matplotlib.colors import ListedColormap
 import networkx as nx
 from dotenv import load_dotenv
 import os
-
+from src.llm import CollectionLLM
 load_dotenv()
 
 
@@ -93,20 +93,58 @@ class Data:
         self.number_clusters = int(input("Based on the elbow plot, please enter the optimal number of clusters: "))
 
     def cluster_data(self):
-        if self.number_clusters is None:
-            print("You need to determine the optimal number of clusters first using the elbow method.")
-            return
+            if self.number_clusters is None:
+                print("You need to determine the optimal number of clusters first using the elbow method.")
+                return
 
-        kmeans = KMeans(n_clusters=self.number_clusters, init='k-means++', random_state=42)
-        self.labels = kmeans.fit_predict(self.all_embeddings)
-        self.cluster_centers = kmeans.cluster_centers_
-        self.embedding_to_cluster = {i: label for i, label in enumerate(kmeans.labels_)}
-        
-        embedding_index = 0 
-        for key in self.data:
-            for item in self.data[key]:
-                item["cluster"] = self.embedding_to_cluster[embedding_index]
-                embedding_index += 1
+            # Initial K-means clustering
+            kmeans = KMeans(n_clusters=self.number_clusters, init='k-means++', random_state=42)
+            self.labels = kmeans.fit_predict(self.all_embeddings)
+            self.cluster_centers = kmeans.cluster_centers_
+            self.embedding_to_cluster = {i: label for i, label in enumerate(kmeans.labels_)}
+            
+            # Step 1: Identify and remove outliers
+            filtered_embeddings = []
+            filtered_labels = []
+            
+            for cluster_id in range(self.number_clusters):
+                # Extract embeddings for the current cluster
+                cluster_indices = [i for i, label in enumerate(self.labels) if label == cluster_id]
+                cluster_embeddings = self.all_embeddings[cluster_indices]
+
+                # Calculate distances from the centroid
+                centroid = self.cluster_centers[cluster_id]
+                distances = np.linalg.norm(cluster_embeddings - centroid, axis=1)
+
+                # Determine the 75th percentile distance as the outlier threshold
+                distance_threshold = np.percentile(distances, 75)
+
+                # Filter out the outliers (distances greater than the 75th percentile)
+                non_outlier_indices = [idx for idx, distance in zip(cluster_indices, distances) if distance <= distance_threshold]
+
+                # Collect the filtered embeddings and labels
+                filtered_embeddings.extend(self.all_embeddings[non_outlier_indices])
+                filtered_labels.extend([cluster_id] * len(non_outlier_indices))
+
+            # Convert filtered data to numpy arrays
+            filtered_embeddings = np.array(filtered_embeddings)
+
+            # Step 2: Reclustering on the filtered data
+            kmeans_reclustered = KMeans(n_clusters=self.number_clusters, init='k-means++', random_state=42)
+            self.labels = kmeans_reclustered.fit_predict(filtered_embeddings)
+            self.cluster_centers = kmeans_reclustered.cluster_centers_
+
+            # Update the embedding-to-cluster mapping after reclustering
+            embedding_index = 0
+            self.embedding_to_cluster = {}
+            for key in self.data:
+                for item in self.data[key]:
+                    if embedding_index < len(filtered_embeddings):
+                        item["cluster"] = self.labels[embedding_index]
+                        embedding_index += 1
+                    else:
+                        item["cluster"] = None  # Handle any leftover data points that may not be in filtered clusters
+
     def calculate_statistics(self):
         distances = []
         for embedding, label in zip(self.all_embeddings, self.labels):
@@ -126,8 +164,11 @@ class Data:
 
     def plot_clusters(self, plot=False):
         if plot:
+            # Ensure we use filtered embeddings and labels
             tsne = TSNE(n_components=2, perplexity=50, random_state=42)
-            embeddings_2d = tsne.fit_transform(self.all_embeddings)
+            
+            # Apply t-SNE only on the filtered embeddings
+            embeddings_2d = tsne.fit_transform(self.all_embeddings)  # Make sure self.all_embeddings is updated after filtering
 
             colors = [
                 "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#00FFFF", "#FF00FF", "#800000",
@@ -137,6 +178,11 @@ class Data:
                 "#9400D3", "#FFD700"
             ]
             cmap = ListedColormap(colors)
+
+            # Ensure the number of labels matches the filtered data points
+            if len(self.labels) != len(embeddings_2d):
+                print("Mismatch between labels and embeddings after filtering. Please check the filtering process.")
+                return
 
             plt.figure(figsize=(10, 8))
             scatter = plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1], c=self.labels, cmap=cmap)
@@ -175,12 +221,12 @@ class Data:
 
     def label_intents(self, closest_utterances, model, plot=False):
         self.intent_by_cluster = {}
-
+        try : 
+            client = CollectionLLM.llm_collection[model]
+        except KeyError as e : 
+            print(f"model {model} is not available, you need to use one of these models {str(list(CollectionLLM.llm_collection.keys()))} : {e}")
         for cluster, utterances in tqdm(closest_utterances.items(), desc="Labeling Intents"):
-            prompt = ("You will be given some utterances from a conversation between a customer support agent and clients from a specific company. "
-                      "You need to extract the intent of these utterances. Your output should be a simple short phrase describing the common overall "
-                      "intent of these utterances. Replace any proper names or specifications with the category of the object (for example, replace 'Alice' "
-                      "with 'Customer Name').\n")
+            prompt = ("You will be provided with multiple utterances from conversations between a customer support agent and clients from a specific company. Your task is to identify and extract the underlying intent of these utterances. Your response should be a concise phrase summarizing the collective intent, abstracting specific details like names or unique identifiers into generalized categories (e.g., replace 'Alice' with 'Customer Name'). Ensure your output is a single phrase that represents the overarching purpose or request.")
 
             for utterance in utterances:
                 prompt += f"- {utterance}\n"
@@ -188,13 +234,11 @@ class Data:
             prompt += "\nYour response should be a dict with one attribute named 'intent'."
 
             try:
-                client = OpenAI(base_url=os.getenv("BASE_URL_OLLAMA"), api_key=os.getenv('API_KEY_OLLAMA'))
-                completion = client.chat.completions.create(
-                    model=model,
+                completion = client.get_response(
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an AI specializing in intent and motive recognition. You will be given utterances from customer support agent conversations and output intent in JSON format."
+                            "content": "You are an AI expert in recognizing intent and underlying motives. You will receive utterances from customer support conversations. Your task is to identify and succinctly summarize the intent behind these utterances"
                         },
                         {
                             "role": "user",
@@ -202,12 +246,12 @@ class Data:
                         }
                     ],
                 )
-                intent = json.loads(completion.choices[0].message.content).get("intent", "Unknown")
+                intent = json.loads(completion.replace("```" , "").replace("json" , "")).get("intent")
                 self.intent_by_cluster[str(cluster)] = intent
 
             except Exception as e:
                 print(f"Error reading completion response for cluster {cluster}: {e}")
-                intent = str(completion.choices[0].message.content)
+                intent = str(completion)
                 self.intent_by_cluster[str(cluster)] = intent
 
 
@@ -224,22 +268,36 @@ class Data:
         return ordered_intents
 
     def create_transition_matrix(self, ordered_intents, intent_by_cluster, plot=False):
-        cluster_by_intent = {intent: int(cluster_num) for cluster_num, intent in intent_by_cluster.items()}
-        # Initialize the transition matrix with zeros
-        transition_matrix = np.zeros((len(intent_by_cluster), len(intent_by_cluster)))
-            # Count transitions
+        # Create a mapping from intent to cluster number, ignoring "Unknown" intents
+        cluster_by_intent = {intent: int(cluster_num) for cluster_num, intent in intent_by_cluster.items() if intent != "Unknown"}
+
+        # Determine the size of the transition matrix based on the number of valid intents
+        num_clusters = len(cluster_by_intent)
+        transition_matrix = np.zeros((num_clusters, num_clusters))
+
+        # Count transitions while ignoring invalid intents
         for intent_list in ordered_intents:
             for i in range(len(intent_list) - 1):
                 current_intent = intent_list[i]
                 next_intent = intent_list[i + 1]
-                transition_matrix[cluster_by_intent[current_intent]][cluster_by_intent[next_intent]] += 1
+
+                # Only proceed if both intents are valid and present in the mapping
+                if current_intent in cluster_by_intent and next_intent in cluster_by_intent:
+                    from_idx = cluster_by_intent[current_intent]
+                    to_idx = cluster_by_intent[next_intent]
+
+                    # Safeguard against any indexing issues
+                    if from_idx < num_clusters and to_idx < num_clusters:
+                        transition_matrix[from_idx][to_idx] += 1
+                    else:
+                        print(f"Skipping out-of-bounds transition: {from_idx} -> {to_idx}")
 
         # Normalize the counts to probabilities
         row_sums = transition_matrix.sum(axis=1, keepdims=True)
         transition_matrix = np.divide(transition_matrix, row_sums, where=row_sums != 0) * 100
 
         if plot:
-            self.plot_transition_matrix(transition_matrix, intent_by_cluster)
+            self.plot_transition_matrix(transition_matrix, {intent: cluster_num for intent, cluster_num in cluster_by_intent.items()})
 
         return transition_matrix
 
@@ -267,7 +325,7 @@ class Data:
             for item in self.data[key]:
                 if 'ordered_intents' not in item.keys()  and len(item) != 0  : 
                     cluster = str(item['cluster'])
-                    intent = self.intent_by_cluster.get(cluster, "Unknown")  # Handle missing intents
+                    intent = self.intent_by_cluster.get(cluster)  # Handle missing intents
                     intents_ordered.append(intent)
             # Add the ordered list of intents to the conversation
             self.data[key].append({"ordered_intents": intents_ordered})
@@ -283,7 +341,7 @@ class Data:
         print("=======================")
 
 if __name__ == "__main__":
-    data = Data("src/data/processed_formatted_conversations.json", number_samples=500, max_clusters=40)
+    data = Data("src/data/processed_formatted_conversations.json", number_samples=500, max_clusters=27)
     data.extract_utterances()
     data.sample_data()
     data.generate_embeddings()
@@ -292,7 +350,7 @@ if __name__ == "__main__":
     data.calculate_statistics()
     data.plot_clusters(plot=True)
     # Extract closest utterances
-    n_closest = 5
+    n_closest = 10
     closest_utterances = data.extract_closest_embeddings(n=n_closest)
     # Print the closest utterances for each cluster
     for cluster, utterances in closest_utterances.items():
@@ -303,7 +361,7 @@ if __name__ == "__main__":
         print("=" * 94, "\n\n")
 
     # Get labeled intents
-    intent_by_cluster = data.label_intents(closest_utterances, model="phi", plot=True)
+    intent_by_cluster =data.label_intents(closest_utterances, model="gemini-1.5-flash", plot=True)
 
     # Print out the intents by cluster
     for cluster, intent in intent_by_cluster.items():
