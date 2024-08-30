@@ -1,9 +1,7 @@
-from typing import Union, List, Dict, Iterator, Any
+from typing import List, Dict, Any
 from abc import ABC, abstractmethod
-from openai import AsyncOpenAI
 import google.generativeai as genai
 from mistralai import Mistral
-import asyncio
 from src.config import get_settings
 settings = get_settings()
 
