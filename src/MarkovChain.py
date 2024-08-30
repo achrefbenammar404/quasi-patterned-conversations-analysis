@@ -10,7 +10,6 @@ class ConversationalGraph :
 
 
     def plot_graph_html(G , file_name ):
-        # Initialize PyVis network
         net = Network(notebook=True, width="100%", height="700px", directed=True, cdn_resources="in_line")
 
         # Add nodes and edges from NetworkX graph to PyVis network
