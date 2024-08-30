@@ -2,11 +2,9 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
-from sklearn.metrics import silhouette_score
 from matplotlib.colors import ListedColormap
-from scipy.stats import gaussian_kde
-from typing import Dict 
-import os 
+from typing import Dict, List, Any, Union, Set
+import os
 
 colors = [
     "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#00FFFF", "#FF00FF", "#800000",
@@ -17,9 +15,22 @@ colors = [
 ]
 cmap = ListedColormap(colors)
 
-class Cluster : 
+class Cluster:
 
-    def elbow_method(embeddings, max_clusters=10 , title = 'Elbow Method For Optimal k' , dir_path = "output"):
+    def elbow_method(embeddings: List[np.array], max_clusters: int = 10, 
+                     title: str = 'Elbow Method For Optimal k', 
+                     dir_path: str = "output") -> None:
+        """
+        Performs the elbow method to determine the optimal number of clusters 
+        for KMeans by plotting the average sum of squared distances against 
+        the number of clusters.
+
+        Args:
+            embeddings (List[np.array]): List of embeddings.
+            max_clusters (int, optional): Maximum number of clusters. Defaults to 10.
+            title (str, optional): Title of the plot. Defaults to 'Elbow Method For Optimal k'.
+            dir_path (str, optional): Directory path where the plot will be saved. Defaults to "output".
+        """
         os.makedirs(dir_path, exist_ok=True)
 
         sse = []
@@ -32,32 +43,35 @@ class Cluster :
         plt.plot(range(1, max_clusters + 1), sse, marker='o')
         plt.title(title)
         plt.xlabel('Number of clusters')
-        plt.ylabel('Average Sum of squared distances')
-        os.makedirs(dir_path , exist_ok=True)
+        plt.ylabel('Average Sum of Squared Distances')
         file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
-        plt.savefig(file_path, format='png', dpi=300)  
+        plt.savefig(file_path, format='png', dpi=300)
         plt.show()
-        plt.close() 
-        
-    def cluster_embeddings(data, num_clusters, random_state=42):
-        # Extract all embeddings into a single list
-        all_embeddings = []
-        for key in data:
-            for item in data[key]:
-                all_embeddings.append(item["embedding"])
+        plt.close()
 
-        # Convert list to numpy array for clustering
+    def cluster_embeddings(data: Dict[str, List[Dict[str, Any]]], num_clusters: int, 
+                           random_state: int = 42) -> Union[Dict, np.array, List[int], np.array]:
+        """
+        Clusters the embeddings in the provided data using KMeans.
+
+        Args:
+            data (Dict[str, List[Dict[str, Any]]]): Dictionary with `conv-id`s as keys and 
+                lists of dictionaries with `embedding` and `utterance` as attributes.
+            num_clusters (int): Number of clusters.
+            random_state (int, optional): Random state for KMeans algorithm. Defaults to 42.
+
+        Returns:
+            Tuple[Dict, np.array, List[int], np.array]: Updated data dictionary with cluster labels, 
+                all embeddings, cluster labels, and cluster centers.
+        """
+        all_embeddings = [item["embedding"] for key in data for item in data[key]]
         all_embeddings = np.array(all_embeddings)
 
-        # Apply K-means clustering
         kmeans = KMeans(n_clusters=num_clusters, init='k-means++', random_state=random_state)
         kmeans.fit(all_embeddings)
 
-        # Store cluster results
-        # Create a mapping from embedding index to cluster label
         embedding_to_cluster = {i: label for i, label in enumerate(kmeans.labels_)}
 
-        # Update `data` dictionary to include cluster labels
         embedding_index = 0
         for key in data:
             for item in data[key]:
@@ -65,61 +79,96 @@ class Cluster :
                 embedding_index += 1
 
         return data, all_embeddings, kmeans.labels_, kmeans.cluster_centers_
-    
-    def identify_outliers(embeddings, labels, cluster_centers , percentile ):
-        # Calculate the distances of each embedding to its corresponding cluster center
+
+    def identify_outliers(embeddings: List[Union[List[float], np.array]], 
+                          labels: List[Any], cluster_centers: List[np.array], 
+                          percentile: int) -> Set[int]:
+        """
+        Identifies outliers in each cluster based on the distance to the cluster centers.
+
+        Args:
+            embeddings (List[Union[List[float], np.array]]): List of embeddings.
+            labels (List[Any]): List of cluster labels.
+            cluster_centers (List[np.array]): List of cluster centroids.
+            percentile (int): Percentile to consider as outliers.
+
+        Returns:
+            Set[int]: Indices of outliers.
+        """
         distances = {i: [] for i in range(len(cluster_centers))}
         for idx, (embedding, label) in enumerate(zip(embeddings, labels)):
             distance = np.linalg.norm(embedding - cluster_centers[label])
             distances[label].append(distance)
 
-        # Determine the 75th percentile distance for each cluster
         percentile_75 = {label: np.percentile(distances[label], percentile) for label in distances}
 
-        # Identify outliers
-        outliers = set()
-        for idx, (embedding, label) in enumerate(zip(embeddings, labels)):
-            distance = np.linalg.norm(embedding - cluster_centers[label])
-            if distance > percentile_75[label]:
-                outliers.add(idx)
+        outliers = {idx for idx, (embedding, label) in enumerate(zip(embeddings, labels)) 
+                    if np.linalg.norm(embedding - cluster_centers[label]) > percentile_75[label]}
 
         return outliers
-    
-    def remove_outliers(data, outliers):
+
+    def remove_outliers(data: Dict[str, List[Dict[str, Any]]], outliers: Set[int]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Removes outliers from the data.
+
+        Args:
+            data (Dict[str, List[Dict[str, Any]]]): Data dictionary with `conv-id`s as keys and 
+                lists of dictionaries with `embedding` and `utterance` attributes.
+            outliers (Set[int]): Set of outlier indices.
+
+        Returns:
+            Dict[str, List[Dict[str, Any]]]: Cleaned data dictionary with outliers removed.
+        """
         cleaned_data = {}
         embedding_index = 0
         for key in data:
-            cleaned_data[key] = []
-            for item in data[key]:
-                if embedding_index not in outliers:
-                    cleaned_data[key].append(item)
-                embedding_index += 1
+            cleaned_data[key] = [item for item in data[key] if embedding_index not in outliers]
+            embedding_index += len(data[key])
         return cleaned_data
-    
-    def visualize_clusters_tsne(embeddings, labels , perplexity = 30 , title = 't-SNE Visualization of Clusters' , dir_path = "output/"):
-        tsne = TSNE(n_components=2, random_state=42 , perplexity=perplexity)
+
+    def visualize_clusters_tsne(embeddings: List[Union[np.array , List[float]]], labels: List[int], 
+                                perplexity: int = 30, title: str = 't-SNE Visualization of Clusters', 
+                                dir_path: str = "output/") -> None:
+        """
+        Visualizes clusters using t-SNE.
+
+        Args:
+            embeddings (np.array): Numpy array of embeddings.
+            labels (List[int]): List of cluster labels.
+            perplexity (int, optional): Perplexity parameter for t-SNE. Defaults to 30.
+            title (str, optional): Title of the plot. Defaults to 't-SNE Visualization of Clusters'.
+            dir_path (str, optional): Directory path where the plot will be saved. Defaults to "output/".
+        """
+        tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
         embeddings_2d = tsne.fit_transform(embeddings)
         os.makedirs(dir_path, exist_ok=True)
 
         plt.figure(figsize=(20, 10))
-        scatter = plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1], c=labels , cmap=cmap)
+        scatter = plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1], c=labels, cmap=cmap)
         plt.colorbar(scatter)
         plt.title(title)
         file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
-        plt.savefig(file_path, format='png', dpi=300)  
-        plt.close() 
-        
-    def plot_distance_distribution(
-        embeddings, 
-        labels, 
-        cluster_centers, 
-        title='Histogram of Distances to Cluster Centroids', 
-        dir_path="output/"
-    ):
-        distances = []
-        for idx, (embedding, label) in enumerate(zip(embeddings, labels)):
-            distance = np.linalg.norm(embedding - cluster_centers[label])
-            distances.append(distance)
+        plt.savefig(file_path, format='png', dpi=300)
+        plt.close()
+
+    def plot_distance_distribution(embeddings: np.array, labels: List[int], 
+                                   cluster_centers: np.array, title: str = 'Histogram of Distances to Cluster Centroids', 
+                                   dir_path: str = "output/") -> Dict[str, Union[float, np.array]]:
+        """
+        Plots the distribution of distances from each embedding to its corresponding cluster centroid.
+
+        Args:
+            embeddings (np.array): Numpy array of embeddings.
+            labels (List[int]): List of cluster labels.
+            cluster_centers (np.array): Numpy array of cluster centroids.
+            title (str, optional): Title of the plot. Defaults to 'Histogram of Distances to Cluster Centroids'.
+            dir_path (str, optional): Directory path where the plot will be saved. Defaults to "output/".
+
+        Returns:
+            Dict[str, Union[float, np.array]]: Dictionary containing mean, standard deviation, and 
+                25th, 50th, and 75th percentiles of distances.
+        """
+        distances = [np.linalg.norm(embedding - cluster_centers[label]) for embedding, label in zip(embeddings, labels)]
 
         distances = np.array(distances)
         mean_distance = np.mean(distances)
@@ -129,7 +178,8 @@ class Cluster :
         plt.figure(figsize=(12, 8))
         plt.hist(distances, bins=30, alpha=0.7, color='blue', edgecolor='black')
 
-        for percentile, color, label in zip(percentiles, ['green', 'orange', 'red'], ['25th percentile', '50th percentile', '75th percentile']):
+        for percentile, color, label in zip(percentiles, ['green', 'orange', 'red'], 
+                                            ['25th percentile', '50th percentile', '75th percentile']):
             plt.axvline(percentile, color=color, linestyle='dashed', linewidth=2, label=f'{label}: {percentile:.2f}')
 
         plt.xlabel('Distance to Centroid')
@@ -141,26 +191,37 @@ class Cluster :
         os.makedirs(dir_path, exist_ok=True)
 
         file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
-        plt.savefig(file_path, format='png', dpi=300)  
-        plt.close()  
+        plt.savefig(file_path, format='png', dpi=300)
+        plt.close()
 
         return {"mean": mean_distance, "std": std_distance, "25,50,75": percentiles}
-    
-    def extract_closest_embeddings(data, embeddings, labels, cluster_centers, n=5):
+
+    def extract_closest_embeddings(data: Dict[str, List[Dict[str, Any]]], 
+                                   embeddings: np.array, labels: List[int], 
+                                   cluster_centers: np.array, n: int = 5) -> Dict[int, List[str]]:
+        """
+        Extracts the closest n embeddings to each cluster center.
+
+        Args:
+            data (Dict[str, List[Dict[str, Any]]]): Data dictionary with `conv-id`s as keys and 
+                lists of dictionaries with `embedding` and `utterance` attributes.
+            embeddings (np.array): Numpy array of embeddings.
+            labels (List[int]): List of cluster labels.
+            cluster_centers (np.array): Numpy array of cluster centroids.
+            n (int, optional): Number of closest embeddings to extract. Defaults to 5.
+
+        Returns:
+            Dict[int, List[str]]: Dictionary mapping cluster indices to lists of closest utterances.
+        """
         closest_embeddings = {i: [] for i in range(len(cluster_centers))}
         
-        # Calculate the distances of each embedding to its corresponding cluster center
         for idx, (embedding, label) in enumerate(zip(embeddings, labels)):
             distance = np.linalg.norm(embedding - cluster_centers[label])
             closest_embeddings[label].append((distance, idx))
 
-        # Sort the distances and extract the n closest embeddings for each cluster
-        closest_n_embeddings = {}
-        for cluster, distances in closest_embeddings.items():
-            sorted_distances = sorted(distances, key=lambda x: x[0])
-            closest_n_embeddings[cluster] = sorted_distances[:n]
+        closest_n_embeddings = {cluster: sorted(distances, key=lambda x: x[0])[:n] 
+                                for cluster, distances in closest_embeddings.items()}
 
-        # Extract the corresponding utterances
         closest_n_utterances = {}
         for cluster, closest in closest_n_embeddings.items():
             closest_n_utterances[cluster] = []
@@ -174,14 +235,18 @@ class Cluster :
                         current_idx -= len(data[key])
 
         return closest_n_utterances
-    
-    def print_closest_utterances(closest_utterances : Dict ) : 
+
+    def print_closest_utterances(closest_utterances: Dict[int, List[str]]) -> None:
+        """
+        Prints the closest utterances to each cluster center.
+
+        Args:
+            closest_utterances (Dict[int, List[str]]): Dictionary mapping cluster indices 
+                to lists of closest utterances.
+        """
         for cluster, utterances in closest_utterances.items():
             print(f"Cluster {cluster}:")
-            print("==============================================================================================")
-            for idx , utterance in enumerate(utterances):
-                print("- " , utterance)
-            print("==============================================================================================\n\n")
-
-
-        
+            print("=" * 94)
+            for idx, utterance in enumerate(utterances):
+                print(f"- {utterance}")
+            print("=" * 94 + "\n\n")
