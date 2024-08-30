@@ -26,11 +26,9 @@ class LLM(ABC):
         """
         Args:
             messages (list):  A list of messages (conversation history).
-            stream (bool):  A boolean flag indicating if the response should be streamed.
-            max_token (_type_, optional): max number of tokens in the response. Defaults to None.
 
         Returns:
-            Union[str, AsyncIterator[str]]: The generated response.
+            str: The generated response.
         """
         pass
 
@@ -99,9 +97,10 @@ class GoogleLLM(LLM):
 
 
 class CollectionLLM : 
-    llm_collection = {
+    llm_collection : Dict[str , LLM]= {
             "gemini-1.5-pro": GoogleLLM(model_name="gemini-1.5-pro") ,   
-            "gemini-1.5-flash" : GoogleLLM(model="gemini-1.5-flash")
+            "gemini-1.5-flash" : GoogleLLM(model_name="gemini-1.5-flash") , 
+            "open-mixtral-8x22b" : MistralLLM("open-mixtral-8x22b")
     }
 
 
