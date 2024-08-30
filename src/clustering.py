@@ -6,6 +6,7 @@ from sklearn.metrics import silhouette_score
 from matplotlib.colors import ListedColormap
 from scipy.stats import gaussian_kde
 from typing import Dict 
+import os 
 
 colors = [
     "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#00FFFF", "#FF00FF", "#800000",
@@ -18,7 +19,9 @@ cmap = ListedColormap(colors)
 
 class Cluster : 
 
-    def elbow_method(embeddings, max_clusters=10):
+    def elbow_method(embeddings, max_clusters=10 , title = 'Elbow Method For Optimal k' , dir_path = "output"):
+        os.makedirs(dir_path, exist_ok=True)
+
         sse = []
         for k in range(1, max_clusters + 1):
             kmeans = KMeans(n_clusters=k, init='k-means++', random_state=42)
@@ -27,10 +30,14 @@ class Cluster :
         
         plt.figure(figsize=(10, 6))
         plt.plot(range(1, max_clusters + 1), sse, marker='o')
-        plt.title('Elbow Method For Optimal k')
+        plt.title(title)
         plt.xlabel('Number of clusters')
         plt.ylabel('Average Sum of squared distances')
+        os.makedirs(dir_path , exist_ok=True)
+        file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
+        plt.savefig(file_path, format='png', dpi=300)  
         plt.show()
+        plt.close() 
         
     def cluster_embeddings(data, num_clusters, random_state=42):
         # Extract all embeddings into a single list
@@ -89,17 +96,26 @@ class Cluster :
                 embedding_index += 1
         return cleaned_data
     
-    def visualize_clusters_tsne(embeddings, labels , perplexity = 30 ):
+    def visualize_clusters_tsne(embeddings, labels , perplexity = 30 , title = 't-SNE Visualization of Clusters' , dir_path = "output/"):
         tsne = TSNE(n_components=2, random_state=42 , perplexity=perplexity)
         embeddings_2d = tsne.fit_transform(embeddings)
+        os.makedirs(dir_path, exist_ok=True)
 
         plt.figure(figsize=(20, 10))
         scatter = plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1], c=labels , cmap=cmap)
         plt.colorbar(scatter)
-        plt.title('t-SNE Visualization of Clusters')
-        plt.show()
+        plt.title(title)
+        file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
+        plt.savefig(file_path, format='png', dpi=300)  
+        plt.close() 
         
-    def plot_distance_distribution(embeddings, labels, cluster_centers):
+    def plot_distance_distribution(
+        embeddings, 
+        labels, 
+        cluster_centers, 
+        title='Histogram of Distances to Cluster Centroids', 
+        dir_path="output/"
+    ):
         distances = []
         for idx, (embedding, label) in enumerate(zip(embeddings, labels)):
             distance = np.linalg.norm(embedding - cluster_centers[label])
@@ -116,15 +132,19 @@ class Cluster :
         for percentile, color, label in zip(percentiles, ['green', 'orange', 'red'], ['25th percentile', '50th percentile', '75th percentile']):
             plt.axvline(percentile, color=color, linestyle='dashed', linewidth=2, label=f'{label}: {percentile:.2f}')
 
-        
-
         plt.xlabel('Distance to Centroid')
         plt.ylabel('Frequency')
-        plt.title('Histogram of Distances to Cluster Centroids')
+        plt.title(title)
         plt.legend()
         plt.grid(True)
-        plt.show()
-        return {"mean" : mean_distance , "std" :  std_distance , "25,50,75" : percentiles}
+
+        os.makedirs(dir_path, exist_ok=True)
+
+        file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
+        plt.savefig(file_path, format='png', dpi=300)  
+        plt.close()  
+
+        return {"mean": mean_distance, "std": std_distance, "25,50,75": percentiles}
     
     def extract_closest_embeddings(data, embeddings, labels, cluster_centers, n=5):
         closest_embeddings = {i: [] for i in range(len(cluster_centers))}

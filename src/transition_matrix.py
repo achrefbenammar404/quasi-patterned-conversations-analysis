@@ -1,8 +1,6 @@
 import numpy as np
-import pandas as pd
-import networkx as nx
 import matplotlib.pyplot as plt
-
+import os 
 
 class TransitionAnalysis: 
     def create_transition_matrix(ordered_intents , intent_by_cluster):
@@ -24,11 +22,11 @@ class TransitionAnalysis:
         
         return transition_matrix
     
-    def plot_transition_matrix(transition_matrix, intent_by_cluster, font_size=8):
+    def plot_transition_matrix(transition_matrix, intent_by_cluster, font_size=4 , title ='Transition Matrix' , dir_path = "output" ):
         fig, ax = plt.subplots(figsize=(50, 30))
         cax = ax.matshow(transition_matrix, cmap='magma_r')
 
-        plt.title('Transition Matrix', pad=20)
+        plt.title(title, pad=20)
         fig.colorbar(cax)
         ax.set_xticks(np.arange(len(intent_by_cluster)))
         ax.set_yticks(np.arange(len(intent_by_cluster)))
@@ -40,7 +38,13 @@ class TransitionAnalysis:
 
         plt.xlabel('To Intent')
         plt.ylabel('From Intent')
+        os.makedirs(dir_path, exist_ok=True)
+
+        file_path = os.path.join(dir_path, title.replace(' ', '_') + '.png')
         plt.show()
+        plt.savefig(file_path, format='png', dpi=300)  
+        plt.close()  
+
 
     def plot_scaled_probability_distribution(transition_matrix):
     # Flatten the transition matrix and remove zero entries
