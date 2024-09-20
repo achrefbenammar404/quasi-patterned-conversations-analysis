@@ -23,3 +23,5 @@ __pycache__/
 
 
 *.png
+
+!output/filter-and-reconnect-graph.png
