@@ -20,8 +20,10 @@ __pycache__/
 #virtual environment 
 /venv/
 
+*.html
 
 
 *.png
 
 !output/filter-and-reconnect-graph.png
+!output/Sankey-Plot.png
