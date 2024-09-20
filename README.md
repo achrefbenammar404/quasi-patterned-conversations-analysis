@@ -2,7 +2,15 @@
 
 ## Overview
 
-This repository supports the research paper titled "A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows." The project introduces a novel computational framework for constructing conversational graphs that effectively capture the flow and patterns within quasi-patterned sets of conversations. By leveraging advanced embedding techniques, clustering, and large language models, this approach aims to enhance the analysis and visualization of conversational dynamics, particularly in large-scale dialogue datasets.
+This repository supports the research paper titled "[A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](AnalyzingLarge_ScaleQuasi_PatternedDialogueFlows.pdf)." The project introduces a novel computational framework for constructing conversational graphs that effectively capture the flow and patterns within quasi-patterned sets of conversations. By leveraging advanced embedding techniques, clustering, and large language models, this approach aims to enhance the analysis and visualization of conversational dynamics, particularly in large-scale dialogue datasets.
+
+### Conversational Graph Visualization
+
+Below is an embedded view of the generated conversational graph using the Filter\&Reconnect method:
+
+<iframe src="output/filter&reconnect.html" width="100%" height="500px"></iframe>
+
+For a detailed explanation of the approach, please refer to the full research paper: [A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](AnalyzingLarge_ScaleQuasi_PatternedDialogueFlows.pdf).
 
 ## Methodology
 
@@ -21,6 +29,37 @@ These steps are designed to provide a scalable and interpretable solution for an
 
 The study uses data from the [ABCD v1.1](https://github.com/asappresearch/abcd/blob/master/data/abcd_v1.1.json.gz) dataset, which contains customer support conversations. This dataset is ideal for this research as it exhibits quasi-patterned conversational flows, which are central to the proposed analysis.
 
+### Using Custom Datasets
+
+If you'd like to use this framework on other conversational datasets, ensure the data directory contains a JSON file where:
+
+- Keys are conversation IDs.
+- Values are a list of dictionaries, where each dictionary represents an utterance.
+- Each dictionary should contain:
+  - `role`: The role of the speaker (`"agent"`, `"customer"`, or `"action"`).
+  - `content`: The content of the utterance.
+
+Example structure:
+
+```json
+{
+  "conversation_1": [
+    {"role": "agent", "content": "Hello, how can I help you today?"},
+    {"role": "customer", "content": "I need assistance with my account."},
+    {"role": "action", "content": "Agent opened account details."},
+    {"role": "agent", "content": "I can help with that. What seems to be the issue?"}
+  ],
+  "conversation_2": [
+    {"role": "customer", "content": "My internet connection is down."},
+    {"role": "agent", "content": "Let me check the status of your connection."},
+    {"role": "action", "content": "Agent checked network status."},
+    {"role": "agent", "content": "It seems like there’s an outage in your area."}
+  ]
+}
+```
+
+Ensure this file is placed in the `data/` directory under the name `processed_formatted_conversations.json`.
+
 ## Installation
 
 1. Clone the repository:
@@ -31,7 +70,13 @@ The study uses data from the [ABCD v1.1](https://github.com/asappresearch/abcd/b
     ```sh
     cd quasi-patterned-conversations-analysis
     ```
-3. Install the required dependencies:
+3. Create and activate a virtual environment:
+    ```sh
+    python3 -m venv venv
+    source venv/bin/activate   # For MacOS/Linux
+    .\venv\Scripts\activate    # For Windows
+    ```
+4. Install the required dependencies:
     ```sh
     pip install -r requirements.txt
     ```
@@ -69,11 +114,7 @@ The study uses data from the [ABCD v1.1](https://github.com/asappresearch/abcd/b
 
 The results include visualizations of t-SNE clusters, histograms of distance distributions, and HTML files for visualizing conversational flows using different graph simplification techniques (Threshold Filtering, Top-K Filtering, and Filter\&Reconnect). The Filter\&Reconnect method provides the most readable and interpretable graphs, effectively highlighting key conversational patterns.
 
-
 ## Acknowledgements
 
 - Uses data from [ABCD v1.1](https://github.com/asappresearch/abcd/blob/master/data/abcd_v1.1.json.gz).
 - The methodologies incorporate advancements in sentence embedding and graph construction techniques.
-
-For more details, please refer to the full research paper associated with this repository.
-
