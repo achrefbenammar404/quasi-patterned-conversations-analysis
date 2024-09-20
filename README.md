@@ -6,9 +6,9 @@ This repository supports the research paper titled "[A Computational Approach to
 
 ### Conversational Graph Visualization
 
-Below is an embedded view of the generated conversational graph using the Filter\&Reconnect method:
+Below is a view of the generated conversational graph using the Filter\&Reconnect method:
+<img src="./output/filter-and-reconnect-graph.png" alt="Filter and Reconnect Graph" width="400"/>
 
-<iframe src="output/filter&reconnect.html" width="100%" height="500px"></iframe>
 
 For a detailed explanation of the approach, please refer to the full research paper: [A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](AnalyzingLarge_ScaleQuasi_PatternedDialogueFlows.pdf).
 
