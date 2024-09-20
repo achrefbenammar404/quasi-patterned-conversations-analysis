@@ -20,6 +20,6 @@ __pycache__/
 #virtual environment 
 /venv/
 
-*.html
+
 
 *.png
