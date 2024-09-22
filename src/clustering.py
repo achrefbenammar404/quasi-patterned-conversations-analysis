@@ -17,7 +17,7 @@ cmap = ListedColormap(colors)
 
 class Cluster:
 
-    def elbow_method(embeddings: List[np.array], max_clusters: int = 10, 
+    def elbow_method(embeddings: List[np.array], min_clusters : int = 5 , max_clusters: int = 10, 
                      title: str = 'Elbow Method For Optimal k', 
                      dir_path: str = "output") -> None:
         """

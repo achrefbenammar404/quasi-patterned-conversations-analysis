@@ -68,15 +68,34 @@ def read_transition_matrix(filename='transition_matrix_ada.npy'):
     return np.load(filename)
 
 
+
 def pre_process_llm_output(function_calling_message: str) -> Dict[str, Union[str, Dict]]:
     print(f"preprocess-llm-output input : {function_calling_message}")
     start_idx = function_calling_message.find('{')
     end_idx = function_calling_message.rfind('}')
-
-    if start_idx != -1 and end_idx != -1 and start_idx < end_idx:
-        json_str = function_calling_message[start_idx:end_idx + 1].replace("'" , '"')
-        print(f"json-str : {json_str}")
-        func_call = json.loads(json_str)
-        return func_call
-
-    return function_calling_message
+    
+    try:
+        if start_idx != -1 and end_idx != -1 and start_idx < end_idx:
+            # Extract the JSON-like string part
+            json_str = function_calling_message[start_idx:end_idx + 1]
+            
+            # Perform replacement of single quotes only if they are not inside double quotes
+            inside_quotes = False
+            processed_str = []
+            for char in json_str:
+                if char == '"':  # Toggle inside_quotes flag
+                    inside_quotes = not inside_quotes
+                if char == "'" and not inside_quotes:
+                    processed_str.append('"')
+                else:
+                    processed_str.append(char)
+            
+            processed_json_str = ''.join(processed_str)
+            print(f"Processed JSON string: {processed_json_str}")
+            
+            # Attempt to load the processed string as JSON
+            func_call = json.loads(processed_json_str)
+            return func_call
+    except Exception as e:
+        print(f"Error: {e}")
+        return function_calling_message

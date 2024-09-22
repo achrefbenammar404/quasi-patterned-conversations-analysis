@@ -9,8 +9,9 @@ from src.MarkovChain import ConversationalGraph
 
 def main(args):
     # Read the conversations from the JSON file
-    conversations = read_json_file("data/processed_formatted_conversations.json")
-    
+
+    conversations = read_json_file(args.file_path)
+
     # Extract customer support utterances
     customer_support_utterances = ExtractEmbed.extract_customer_support_utterances(conversations)
     
@@ -26,11 +27,14 @@ def main(args):
     # Extract embeddings
     all_embeddings = ExtractEmbed.extract_embeddings(data)
     
-    # Use the elbow method to determine optimal number of clusters
-    Cluster.elbow_method(all_embeddings, max_clusters=args.max_clusters)
-    
+    if args.min_clusters !=  args.max_clusters : 
+        # Use the elbow method to determine optimal number of clusters
+        Cluster.elbow_method(all_embeddings, min_clusters = args.min_clusters , max_clusters=args.max_clusters)
+        
     # Ask for the optimal cluster number
-    optimal_cluster_number = int(input("Optimal cluster number: "))
+        optimal_cluster_number = int(input("Optimal cluster number: "))
+    else : 
+        optimal_cluster_number = args.min_clusters 
     
     # Cluster the embeddings
     clustered_data, embeddings, labels, cluster_centers = Cluster.cluster_embeddings(data, num_clusters=optimal_cluster_number)
@@ -76,12 +80,12 @@ def main(args):
     
     # Extract ordered intents
     ordered_intents = Label.extract_ordered_intents(updated_data_with_intents)
-    
+    sampled_data = None 
     # Create transition matrix
     transition_matrix = TransitionAnalysis.create_transition_matrix(ordered_intents, intent_by_cluster)
     
     # Plot transition matrix
-    TransitionAnalysis.plot_transition_matrix(transition_matrix, intent_by_cluster)
+    #TransitionAnalysis.plot_transition_matrix(transition_matrix, intent_by_cluster)
     
     # Create and plot conversational graphs
     for algorithm in ["threshold", "top_k", "filter&reconnect"]:
@@ -92,19 +96,20 @@ def main(args):
             algorithm=algorithm, 
             top_k=args.top_k
         )
-        ConversationalGraph.plot_graph_html(graph, algorithm)
-
+        #ConversationalGraph.plot_graph_html(graph, algorithm)
+        ConversationalGraph.create_sankey_diagram(graph , f"output/sankey-diagram-{algorithm}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
-
-    parser.add_argument("--num_sampled_data", type=int, default=10, help="Number of sampled datapoints")
-    parser.add_argument("--max_clusters", type=int, default=3, help="Maximum number of clusters for the elbow method")
+    parser.add_argument("--file_path" , type = str , default = "data/processed_formatted_conversations.json" , help="path for json formatted conversations/dialogues" )
+    parser.add_argument("--num_sampled_data", type=int, default=1000, help="Number of sampled datapoints")
+    parser.add_argument("--max_clusters", type=int, default=15, help="Maximum number of clusters for the elbow method")
+    parser.add_argument("--min_clusters" ,type=int, default=9, help="Minimum number of clusters for the elbow method" )
     parser.add_argument("--percentile", type=int, default=75, help="Percentile for outlier removal")
     parser.add_argument("--model_name", type=str, default='sentence-transformers/all-MiniLM-L12-v2', help="Model name for SentenceTransformer")
     parser.add_argument("--label_model", type=str, default='open-mixtral-8x22b', help="Model for labeling clusters by closest utterance")
-    parser.add_argument("--min_weight", type=float, default=0.1, help="Minimum weight for conversational graph edges")
+    parser.add_argument("--min_weight", type=float, default=0, help="Minimum weight for conversational graph edges")
     parser.add_argument("--top_k", type=int, default=1, help="Top k edges to keep in the conversational graph")
-    parser.add_argument("--n_closest" , type=int , default=1, help="Number of the closest utterances to each cluster centroid to be passed to the llm for intent extraction")
+    parser.add_argument("--n_closest" , type=int , default=10, help="Number of the closest utterances to each cluster centroid to be passed to the llm for intent extraction")
     args = parser.parse_args()
     main(args)

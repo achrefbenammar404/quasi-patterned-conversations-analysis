@@ -53,7 +53,7 @@ class ExtractEmbed :
             Dict[str , Any]: a dict with keys being the 'conv-id' and value being list of dicts with attributes utterance and embedding of that utterance 
         """
         data = {}
-        for i, key in tqdm(enumerate(sampled_data.keys(), 1) , desc = "embedding in progress ..."):
+        for i, key in tqdm(enumerate(sampled_data.keys(), 1) , desc = "embedding in progress ..." , total=len(sampled_data)):
             sentences = sampled_data[key]
             embeddings = ExtractEmbed.embed_sentences(sentences , model )
             data[key] = [

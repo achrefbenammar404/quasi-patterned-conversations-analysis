@@ -2,6 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from pyvis.network import Network
 import numpy as np
+import plotly.graph_objects as go
 from typing import Dict, List, Tuple
 import os
 
@@ -257,3 +258,35 @@ class ConversationalGraph:
             G = ConversationalGraph.filter_and_reconnect(transition_matrix, intent_by_cluster, min_weight, top_k)
 
         return G
+    
+    def create_sankey_diagram(g: nx.DiGraph, file_name):
+        nodes = list(g.nodes)
+
+        node_map = {node: i for i, node in enumerate(nodes)}
+
+        source = []
+        target = []
+        value = []
+
+        for u, v, data in g.edges(data=True):
+            source.append(node_map[u])
+            target.append(node_map[v])
+            value.append(data['weight'])  
+
+        # Create Sankey Diagram
+        fig = go.Figure(go.Sankey(
+            node=dict(
+                pad=30,  # Increased padding between nodes
+                thickness=20,
+                line=dict(color="black", width=0.5),
+                label=nodes,  # Node labels
+            ),
+            link=dict(
+                source=source,  # Source indices
+                target=target,  # Target indices
+                value=value,    
+            )
+        ))
+
+        fig.update_layout(title_text="Sankey Diagram of Directed Graph", font_size=12)
+        fig.write_html(f"{file_name}.html")
