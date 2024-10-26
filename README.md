@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository supports the research paper titled "[A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](AnalyzingLarge_ScaleQuasi_PatternedDialogueFlows.pdf)." The project introduces a novel computational framework for constructing conversational graphs that effectively capture the flow and patterns within quasi-patterned sets of conversations. By leveraging advanced embedding techniques, clustering, and large language models, this approach aims to enhance the analysis and visualization of conversational dynamics, particularly in large-scale dialogue datasets.
+This repository supports the research paper titled "[A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](AnalyzingLargeScaleQuasiPatternedDialogueFlows.pdf)." The project introduces a novel computational framework for constructing conversational graphs that effectively capture the flow and patterns within quasi-patterned sets of conversations. By leveraging advanced embedding techniques, clustering, and large language models, this approach aims to enhance the analysis and visualization of conversational dynamics, particularly in large-scale dialogue datasets.
 
 ### Conversational Graph Visualization
 
