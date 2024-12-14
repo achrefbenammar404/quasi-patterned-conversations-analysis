@@ -30,7 +30,7 @@ class ConversationalGraphBuilder(ABC):
         pass 
 
 
-    def plot_graph_html(G: nx.DiGraph, file_name: str) -> None:
+    def plot_graph_html(G: nx.DiGraph, dir_name , file_name: str) -> None:
         """
         Generates an HTML visualization of the directed graph using PyVis and saves it to a file.
 
@@ -118,7 +118,7 @@ class ConversationalGraphBuilder(ABC):
         # Generate the graph and save it to an HTML file
         if not os.path.exists("output"):
             os.mkdir("output")
-        net.show(f"output/{file_name}.html")
+        net.show(os.path.join(dir_name , f"{file_name}.html"))
 
 
     

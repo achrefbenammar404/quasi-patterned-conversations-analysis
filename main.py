@@ -54,19 +54,19 @@ def main(args):
     # Cluster the embeddings
     clustered_data, embeddings, labels, cluster_centers = Cluster.cluster_embeddings(data, num_clusters=optimal_cluster_number)
     
-    # Visualize clusters before outlier removal
-    Cluster.visualize_clusters_tsne(embeddings, labels, perplexity=50, title="t-SNE Visualization of Clusters Before Outlier Removal")
+    # # Visualize clusters before outlier removal
+    # Cluster.visualize_clusters_tsne(embeddings, labels, perplexity=50, title="t-SNE Visualization of Clusters Before Outlier Removal")
     
-    # Plot distance distribution before outlier removal
-    stats = Cluster.plot_distance_distribution(embeddings, labels, cluster_centers, title="Histogram of Distances to Cluster Centroids Before Outlier Removal")
-    print(stats)
+    # # Plot distance distribution before outlier removal
+    # stats = Cluster.plot_distance_distribution(embeddings, labels, cluster_centers, title="Histogram of Distances to Cluster Centroids Before Outlier Removal")
+    # print(stats)
 
     
-    # Visualize clusters after outlier removal
-    Cluster.visualize_clusters_tsne(embeddings, labels, perplexity=50, title="t-SNE Visualization of Clusters After Outlier Removal")
+    # # Visualize clusters after outlier removal
+    # Cluster.visualize_clusters_tsne(embeddings, labels, perplexity=50, title="t-SNE Visualization of Clusters After Outlier Removal")
     
-    # Plot distance distribution after outlier removal
-    Cluster.plot_distance_distribution(embeddings, labels, cluster_centers, title="Histogram of Distances to Cluster Centroids After Outlier Removal")
+    # # Plot distance distribution after outlier removal
+    # Cluster.plot_distance_distribution(embeddings, labels, cluster_centers, title="Histogram of Distances to Cluster Centroids After Outlier Removal")
     
     # Extract closest utterances
     n_closest = args.n_closest
@@ -103,7 +103,12 @@ def main(args):
             top_k=args.top_k, 
             alpha = args.alpha 
         )
-        builder.plot_graph_html(graph, f"{builder_name}_tau{args.tau}_top_k{args.top_k}_alpha{args.alpha}")
+        dir_name = os.path.join("output", f"n_clusters_{optimal_cluster_number}n_samples{args.num_sampled_data}tau{args.tau}_top_k{args.top_k}_alpha{args.alpha}")
+
+        # Check if the directory exists, and create it if not
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        builder.plot_graph_html(graph, dir_name , builder_name)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
