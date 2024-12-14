@@ -1,10 +1,10 @@
-from src.graph.conversational_graph_builder import ConversationalGraph
+from src.graph.conversational_graph_builder import ConversationalGraphBuilder
 import networkx as nx
 import numpy as np
 from typing import Dict
 
 
-class ThresholdGraphBuilder(ConversationalGraph) : 
+class TopKGraphBuilder(ConversationalGraphBuilder) : 
     def create_directed_graph(
         transition_matrix: np.ndarray, 
         intent_by_cluster: Dict[str, str], 

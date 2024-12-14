@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 import os
 from abc import ABC, abstractmethod
 
-class ConversationalGraph(ABC):
+class ConversationalGraphBuilder(ABC):
     @abstractmethod
     def create_directed_graph(
         transition_matrix: np.ndarray, 
@@ -29,7 +29,7 @@ class ConversationalGraph(ABC):
         """
         pass 
 
-    
+
     def plot_graph_html(G: nx.DiGraph, file_name: str) -> None:
         """
         Generates an HTML visualization of the directed graph using PyVis and saves it to a file.

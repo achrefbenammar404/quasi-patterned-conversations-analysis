@@ -1,10 +1,10 @@
-from src.graph.conversational_graph_builder import ConversationalGraph
+from src.graph.conversational_graph_builder import ConversationalGraphBuilder
 import networkx as nx
 import numpy as np
 from typing import Dict
 
 
-class ThresholdGraphBuilder(ConversationalGraph) : 
+class ThresholdGraphBuilder(ConversationalGraphBuilder) : 
     def create_directed_graph(
         transition_matrix: np.ndarray, 
         intent_by_cluster: Dict[str, str], 
@@ -16,7 +16,8 @@ class ThresholdGraphBuilder(ConversationalGraph) :
         Args:
             transition_matrix (np.ndarray): Matrix representing transition weights between clusters.
             intent_by_cluster (Dict[str, str]): Dictionary mapping cluster indices to their intents.
-            kwargs (dict , optional): {tau :(float, optional): Minimum weight threshold for adding edges ,top_k (int, optional): Number of top edges to keep for each node if using 'top_k' algorithm}
+            kwargs (dict , optional): {tau :(float, optional): Minimum weight threshold for adding edges ,
+            top_k (int, optional): Number of top edges to keep for each node if using 'top_k' algorithm}
 
         Returns:
             nx.DiGraph: The created directed graph.
