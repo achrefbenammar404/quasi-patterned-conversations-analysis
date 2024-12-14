@@ -5,7 +5,22 @@ from src.label import Label
 from src.transition_matrix import TransitionAnalysis
 from src.utils.utils import * 
 from sentence_transformers import SentenceTransformer
-from src.MarkovChain import ConversationalGraph
+from src.graph import (
+    ConversationalGraphBuilder , 
+    AdaptiveThresholdGraphBuilder , 
+    FilterReconnectGraphBuilder , 
+    ThresholdGraphBuilder , 
+    TopKGraphBuilder
+)
+
+
+graph_builders  : Dict[str , ConversationalGraphBuilder ]= {
+    'adaptive_threshold_graph_builder' : AdaptiveThresholdGraphBuilder , 
+    'filter_reconnect_graph_builder' : FilterReconnectGraphBuilder , 
+    'threshold_graph_builder' : ThresholdGraphBuilder , 
+    'top_k_graph_builder' : TopKGraphBuilder
+}
+
 
 def main(args):
     # Read the conversations from the JSON file
@@ -80,20 +95,19 @@ def main(args):
     #TransitionAnalysis.plot_transition_matrix(transition_matrix, intent_by_cluster)
     
     # Create and plot conversational graphs
-    for algorithm in ["threshold", "top_k", "filter&reconnect"]:
-        graph = ConversationalGraph.create_directed_graph(
+    for builder_name , builder in graph_builders.items():
+        graph = builder.create_directed_graph(
             transition_matrix, 
             intent_by_cluster, 
             min_weight=args.min_weight, 
-            algorithm=algorithm, 
-            top_k=args.top_k
+            top_k=args.top_k, 
+            alpha = args.alpha 
         )
-        #ConversationalGraph.plot_graph_html(graph, algorithm)
-        ConversationalGraph.create_sankey_diagram(graph , f"output/sankey-diagram-{algorithm}")
+        builder.plot_graph_html(graph, builder_name)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
-    parser.add_argument("--file_path" , type = str , default = "data/processed_formatted_conversations.json" , help="path for json formatted conversations/dialogues" )
+    parser.add_argument("--file_path" , type = str , default = "data/ABCD.json" , help="path for json formatted conversations/dialogues" )
     parser.add_argument("--num_sampled_data", type=int, default=1000, help="Number of sampled datapoints")
     parser.add_argument("--max_clusters", type=int, default=15, help="Maximum number of clusters for the elbow method")
     parser.add_argument("--min_clusters" ,type=int, default=9, help="Minimum number of clusters for the elbow method" )
@@ -102,6 +116,7 @@ if __name__ == "__main__":
     parser.add_argument("--label_model", type=str, default='open-mixtral-8x22b', help="Model for labeling clusters by closest utterance")
     parser.add_argument("--min_weight", type=float, default=0, help="Minimum weight for conversational graph edges")
     parser.add_argument("--top_k", type=int, default=1, help="Top k edges to keep in the conversational graph")
+    parser.add_argument("--alpha", type=int, default=1, help="alpha for adaptive threshold graph builder")
     parser.add_argument("--n_closest" , type=int , default=10, help="Number of the closest utterances to each cluster centroid to be passed to the llm for intent extraction")
     args = parser.parse_args()
     main(args)
