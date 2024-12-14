@@ -103,7 +103,7 @@ def main(args):
             top_k=args.top_k, 
             alpha = args.alpha 
         )
-        builder.plot_graph_html(graph, builder_name)
+        builder.plot_graph_html(graph, f"{builder_name}_tau{args.tau}_top_k{args.top_k}_alpha{args.alpha}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
