@@ -45,25 +45,17 @@ def main(args):
     # Plot distance distribution before outlier removal
     stats = Cluster.plot_distance_distribution(embeddings, labels, cluster_centers, title="Histogram of Distances to Cluster Centroids Before Outlier Removal")
     print(stats)
-    
-    # Identify outliers
-    outliers = Cluster.identify_outliers(embeddings, labels, cluster_centers, percentile=args.percentile)
-    
-    # Remove outliers
-    cleaned_data = Cluster.remove_outliers(clustered_data, outliers)
-    
-    # Re-cluster the cleaned data
-    reclustered_data, cleaned_embeddings, cleaned_labels, cleaned_cluster_centers = Cluster.cluster_embeddings(cleaned_data, num_clusters=optimal_cluster_number)
+
     
     # Visualize clusters after outlier removal
-    Cluster.visualize_clusters_tsne(cleaned_embeddings, cleaned_labels, perplexity=50, title="t-SNE Visualization of Clusters After Outlier Removal")
+    Cluster.visualize_clusters_tsne(embeddings, labels, perplexity=50, title="t-SNE Visualization of Clusters After Outlier Removal")
     
     # Plot distance distribution after outlier removal
-    Cluster.plot_distance_distribution(cleaned_embeddings, cleaned_labels, cluster_centers, title="Histogram of Distances to Cluster Centroids After Outlier Removal")
+    Cluster.plot_distance_distribution(embeddings, labels, cluster_centers, title="Histogram of Distances to Cluster Centroids After Outlier Removal")
     
     # Extract closest utterances
     n_closest = args.n_closest
-    closest_utterances = Cluster.extract_closest_embeddings(reclustered_data, cleaned_embeddings, cleaned_labels, cluster_centers, n=n_closest)
+    closest_utterances = Cluster.extract_closest_embeddings(clustered_data, embeddings, labels, cluster_centers, n=n_closest)
     Cluster.print_closest_utterances(closest_utterances)
     
     # Label clusters
@@ -73,7 +65,7 @@ def main(args):
     cluster_by_intent = Label.generate_cluster_by_intent(intent_by_cluster)
     
     # Add intents to conversations
-    updated_data_with_intents = Label.add_intents_to_conversations(reclustered_data, intent_by_cluster)
+    updated_data_with_intents = Label.add_intents_to_conversations(clustered_data, intent_by_cluster)
     
     # Print updated data with ordered intents
     Label.print_updated_data_with_ordered_intents(updated_data_with_intents)
