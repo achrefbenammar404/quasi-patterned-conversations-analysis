@@ -31,7 +31,7 @@ def get_random_n_pairs(input_dict, n):
         return input_dict
 
     # Get n random keys from the dictionary
-    random_keys = random.sample(list(input_dict.keys()), n)
+    random_keys = list(input_dict.keys())[:n]
 
     # Create a new dictionary with the random keys and their corresponding values
     random_pairs = {key: input_dict[key] for key in random_keys}

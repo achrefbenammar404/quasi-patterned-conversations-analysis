@@ -28,7 +28,8 @@ class ExtractEmbed :
             
     def embed_sentences (
         sentences : List[str] , 
-        model : SentenceTransformer
+        model : SentenceTransformer , 
+        dataset_name : str 
         ) -> List[Union[np.array , List[float]]] : 
         """This function takes in a list of sentences and returns their embeddings using the OpenAI Ada-002 model.
 
@@ -44,11 +45,9 @@ class ExtractEmbed :
         if str(sentences) in cache : 
             return cache[str(sentences)]
         embeddings = model.encode(sentences=sentences)
-        cache[str(sentences)] = embeddings
-        
         return embeddings
     
-    def embed_sampled_data(sampled_data : Dict , model : SentenceTransformer) -> Dict[str , Any] : 
+    def embed_sampled_data(sampled_data : Dict , model : SentenceTransformer , dataset_name) -> Dict[str , Any] : 
         """method to embed the sampled conversations 
 
         Args:
@@ -61,11 +60,14 @@ class ExtractEmbed :
         data = {}
         for i, key in tqdm(enumerate(sampled_data.keys(), 1) , desc = "embedding in progress ..." , total=len(sampled_data)):
             sentences = sampled_data[key]
-
-            embeddings = ExtractEmbed.embed_sentences(sentences , model )
+            if f"dataset_name_{key}" in cache : 
+                embeddings = np.array(cache[f"dataset_name_{key}"])
+            else :
+                embeddings = ExtractEmbed.embed_sentences(sentences , model  , dataset_name )
+                cache[f"dataset_name_{key}"] = embeddings 
             data[key] = [
-                {"utterance": sentence, "embedding": list(embedding)}
-                for sentence, embedding in zip(sentences, embeddings)
+                    {"utterance": sentence, "embedding": list(embedding)}
+                    for sentence, embedding in zip(sentences, embeddings)
             ]
         save_dict_to_json( cache , "data/embedding_cache.json" )
         return data 

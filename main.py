@@ -37,7 +37,7 @@ def main(args):
     model = SentenceTransformer(model_name_or_path=args.model_name)
     
     # Embed the sampled data
-    data = ExtractEmbed.embed_sampled_data(sampled_data, model)
+    data = ExtractEmbed.embed_sampled_data(sampled_data, model , dataset_name = args.file_path)
     
     # Extract embeddings
     all_embeddings = ExtractEmbed.extract_embeddings(data)
