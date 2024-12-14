@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict
 
 
-class TopKGraphBuilder(ConversationalGraphBuilder) : 
+class ThresholdGraphBuilder(ConversationalGraphBuilder) : 
     def create_directed_graph(
         transition_matrix: np.ndarray, 
         intent_by_cluster: Dict[str, str], 
