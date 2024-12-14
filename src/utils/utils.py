@@ -2,6 +2,8 @@ import json
 import random 
 import numpy as np
 from typing import Dict , Union
+import os
+
 def read_json_file(file_path) : 
     try : 
         with open(file_path, 'r') as file:
@@ -49,15 +51,39 @@ def convert_numpy_int_to_python(data):
     else:
         return data
 
-def save_dict_json(path, data):
-    try:
-        # Convert numpy int32 to Python int
-        data = convert_numpy_int_to_python(data)
-        with open(path, "w") as f:
-            json.dump(data, f, indent=5)
-    except Exception as e:
-        print(f"error occurred in save_dict_json: {e}")
+
+def save_dict_to_json(data: dict, file_path: str) -> None:
+    """
+    Deletes the existing JSON file (if it exists) and saves a dictionary to a new JSON file,
+    converting non-serializable types like NumPy arrays to lists.
     
+    Args:
+        data (dict): The dictionary to save.
+        file_path (str): The path to the JSON file.
+        
+    Returns:
+        None
+    """
+    # Step 1: Delete the existing JSON file if it exists
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f"Deleted existing file: {file_path}")
+
+    # Step 2: Save the new data to the JSON file
+    def convert_to_serializable(obj):
+        # Handle NumPy arrays
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        # Add handling for other non-serializable types here if needed
+        raise TypeError(f"Type {type(obj)} is not JSON serializable")
+    
+    try:
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4, default=convert_to_serializable)
+        print(f"Dictionary successfully saved to {file_path}")
+    except Exception as e:
+        raise IOError(f"An error occurred while saving the dictionary to {file_path}: {e}")
+
 
 def apply_str_filter(s) : 
     return [''.join([w[0].upper() for w in sentence.split(" ")])  for sentence in s   ]
@@ -99,3 +125,24 @@ def pre_process_llm_output(function_calling_message: str) -> Dict[str, Union[str
     except Exception as e:
         print(f"Error: {e}")
         return function_calling_message
+    
+
+
+def read_json_to_dict(file_path: str) -> dict:
+    """
+    Reads a JSON file and loads its contents into a dictionary.
+    
+    Args:
+        file_path (str): The path to the JSON file.
+        
+    Returns:
+        dict: The contents of the JSON file as a Python dictionary.
+    """
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The file at {file_path} does not exist.")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to decode JSON. Ensure the file is a valid JSON: {e}")

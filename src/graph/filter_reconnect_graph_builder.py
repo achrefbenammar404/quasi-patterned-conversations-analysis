@@ -27,7 +27,7 @@ class FilterReconnectGraphBuilder(ConversationalGraphBuilder) :
             tau = kwargs['tau']
             top_k = kwargs['top_k']
         except KeyError as ke : 
-            print("Error occured while extracting params for filter and reconnect : {ke}")
+            print(f"Error occured while extracting params for filter and reconnect : {ke}")
 
         for i, from_intent in intent_by_cluster.items():
                 weights = transition_matrix[int(i)]

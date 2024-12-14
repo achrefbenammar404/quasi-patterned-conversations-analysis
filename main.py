@@ -97,9 +97,9 @@ def main(args):
     # Create and plot conversational graphs
     for builder_name , builder in graph_builders.items():
         graph = builder.create_directed_graph(
-            transition_matrix, 
-            intent_by_cluster, 
-            min_weight=args.min_weight, 
+            transition_matrix = transition_matrix, 
+            intent_by_cluster = intent_by_cluster, 
+            tau=args.tau, 
             top_k=args.top_k, 
             alpha = args.alpha 
         )
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument("--percentile", type=int, default=75, help="Percentile for outlier removal")
     parser.add_argument("--model_name", type=str, default='sentence-transformers/all-MiniLM-L12-v2', help="Model name for SentenceTransformer")
     parser.add_argument("--label_model", type=str, default='open-mixtral-8x22b', help="Model for labeling clusters by closest utterance")
-    parser.add_argument("--min_weight", type=float, default=0, help="Minimum weight for conversational graph edges")
+    parser.add_argument("--tau", type=float, default=0, help="Minimum weight for conversational graph edges")
     parser.add_argument("--top_k", type=int, default=1, help="Top k edges to keep in the conversational graph")
     parser.add_argument("--alpha", type=int, default=1, help="alpha for adaptive threshold graph builder")
     parser.add_argument("--n_closest" , type=int , default=10, help="Number of the closest utterances to each cluster centroid to be passed to the llm for intent extraction")

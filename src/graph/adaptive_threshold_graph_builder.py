@@ -6,7 +6,6 @@ from typing import Dict
 
 class AdaptiveThresholdGraphBuilder(ConversationalGraphBuilder):
     def create_directed_graph(
-        self,
         transition_matrix: np.ndarray,
         intent_by_cluster: Dict[str, str],
         **kwargs,

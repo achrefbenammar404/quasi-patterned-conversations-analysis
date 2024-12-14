@@ -2,6 +2,10 @@ from typing import List  , Dict , Union , Any
 import numpy as np 
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm 
+from src.utils.utils import read_json_to_dict , save_dict_to_json
+
+
+cache = read_json_to_dict("data/embedding_cache.json")
 
 class ExtractEmbed : 
     def extract_customer_support_utterances(
@@ -37,8 +41,10 @@ class ExtractEmbed :
             List[Union[np.array , List[float]]]: list of embeddings 
         """
         # Make the API call to get the embeddings
+        if str(sentences) in cache : 
+            return cache[str(sentences)]
         embeddings = model.encode(sentences=sentences)
-        
+        cache[str(sentences)] = embeddings
         
         return embeddings
     
@@ -55,11 +61,13 @@ class ExtractEmbed :
         data = {}
         for i, key in tqdm(enumerate(sampled_data.keys(), 1) , desc = "embedding in progress ..." , total=len(sampled_data)):
             sentences = sampled_data[key]
+
             embeddings = ExtractEmbed.embed_sentences(sentences , model )
             data[key] = [
                 {"utterance": sentence, "embedding": list(embedding)}
                 for sentence, embedding in zip(sentences, embeddings)
             ]
+        save_dict_to_json( cache , "data/embedding_cache.json" )
         return data 
             
     def extract_embeddings(data : Dict) -> List[Union[List[float] , np.array]] : 
