@@ -80,52 +80,7 @@ class Cluster:
 
         return data, all_embeddings, kmeans.labels_, kmeans.cluster_centers_
 
-    def identify_outliers(embeddings: List[Union[List[float], np.array]], 
-                          labels: List[Any], cluster_centers: List[np.array], 
-                          percentile: int) -> Set[int]:
-        """
-        Identifies outliers in each cluster based on the distance to the cluster centers.
-
-        Args:
-            embeddings (List[Union[List[float], np.array]]): List of embeddings.
-            labels (List[Any]): List of cluster labels.
-            cluster_centers (List[np.array]): List of cluster centroids.
-            percentile (int): Percentile to consider as outliers.
-
-        Returns:
-            Set[int]: Indices of outliers.
-        """
-        distances = {i: [] for i in range(len(cluster_centers))}
-        for idx, (embedding, label) in enumerate(zip(embeddings, labels)):
-            distance = np.linalg.norm(embedding - cluster_centers[label])
-            distances[label].append(distance)
-
-        percentile_75 = {label: np.percentile(distances[label], percentile) for label in distances}
-
-        outliers = {idx for idx, (embedding, label) in enumerate(zip(embeddings, labels)) 
-                    if np.linalg.norm(embedding - cluster_centers[label]) > percentile_75[label]}
-
-        return outliers
-
-    def remove_outliers(data: Dict[str, List[Dict[str, Any]]], outliers: Set[int]) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Removes outliers from the data.
-
-        Args:
-            data (Dict[str, List[Dict[str, Any]]]): Data dictionary with `conv-id`s as keys and 
-                lists of dictionaries with `embedding` and `utterance` attributes.
-            outliers (Set[int]): Set of outlier indices.
-
-        Returns:
-            Dict[str, List[Dict[str, Any]]]: Cleaned data dictionary with outliers removed.
-        """
-        cleaned_data = {}
-        embedding_index = 0
-        for key in data:
-            cleaned_data[key] = [item for item in data[key] if embedding_index not in outliers]
-            embedding_index += len(data[key])
-        return cleaned_data
-
+   
     def visualize_clusters_tsne(embeddings: List[Union[np.array , List[float]]], labels: List[int], 
                                 perplexity: int = 30, title: str = 't-SNE Visualization of Clusters', 
                                 dir_path: str = "output/") -> None:
