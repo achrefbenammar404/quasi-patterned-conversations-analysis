@@ -22,7 +22,7 @@ class ExtractEmbed :
         customer_support_agent_utterances = {}
         for i , conv in enumerate(processed_formatted_conversations.values()) : 
             customer_support_agent_utterances[i] = [
-                utterance["content"] for utterance in conv if utterance["role"] in["agent" , "action"]
+                utterance["content"] for utterance in conv if utterance["role"] in["agent"]
             ]
         return customer_support_agent_utterances
             

@@ -143,6 +143,6 @@ def read_json_to_dict(file_path: str) -> dict:
             data = json.load(file)
         return data
     except FileNotFoundError:
-        raise FileNotFoundError(f"The file at {file_path} does not exist.")
+        return {}
     except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to decode JSON. Ensure the file is a valid JSON: {e}")
+        return {}

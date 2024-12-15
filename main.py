@@ -102,12 +102,12 @@ def main(args):
             top_k=args.top_k, 
             alpha = args.alpha 
         )
-        dir_name = os.path.join("output", f"n_clusters_{optimal_cluster_number}n_samples{args.num_sampled_data}tau{args.tau}_top_k{args.top_k}_alpha{args.alpha}")
+        dir_name = os.path.join("output", f"dataset{args.file_path}n_clusters_{optimal_cluster_number}n_samples{args.num_sampled_data}tau{args.tau}_top_k{args.top_k}_alpha{args.alpha}")
 
         # Check if the directory exists, and create it if not
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
-        builder.plot_graph_html(graph, dir_name , builder_name)
+        builder.plot_graph_html(graph, dir_name , builder_name )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
