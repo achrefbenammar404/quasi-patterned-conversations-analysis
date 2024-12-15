@@ -6,6 +6,8 @@ import plotly.graph_objects as go
 from typing import Dict, List, Tuple
 import os
 from abc import ABC, abstractmethod
+from networkx.algorithms.community import greedy_modularity_communities
+from matplotlib import cm, colors
 
 class ConversationalGraphBuilder(ABC):
     @abstractmethod
@@ -30,25 +32,40 @@ class ConversationalGraphBuilder(ABC):
         pass 
 
 
-    def plot_graph_html(G: nx.DiGraph, dir_name , file_name: str) -> None:
+
+    def plot_graph_html(G: nx.DiGraph, dir_name: str, file_name: str) -> None:
         """
         Generates an HTML visualization of the directed graph using PyVis and saves it to a file.
+        Nodes are colored by community, and edges are colored based on their weights.
 
         Args:
             G (nx.DiGraph): The directed graph to be visualized.
+            dir_name (str): Directory to save the output HTML file.
             file_name (str): Name of the output HTML file (without extension).
         """
+        # Create PyVis network
         net = Network(notebook=True, width="100%", height="700px", directed=True, cdn_resources="in_line")
+        
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
-        # Add nodes and edges from NetworkX graph to PyVis network
+
+        # Find communities
+        communities = list(greedy_modularity_communities(G))
+        num_communities = len(communities)
+
+        # Generate colors for communities
+        colormap = cm.get_cmap("tab10", num_communities)  # Use a colormap with up to 10 distinct colors
+        community_colors = {node: colors.rgb2hex(colormap(i)[:3]) for i, community in enumerate(communities) for node in community}
+
+        # Add nodes with community colors
         for node in G.nodes:
-            net.add_node(node, label=str(node), title=str(node))
+            color = community_colors.get(node, "#cccccc")  # Default to light gray if no community
+            net.add_node(node, label=str(node), title=f"Community: {color}", color=color)
 
         # Find the minimum and maximum weights
         min_weight = float('inf')
         max_weight = float('-inf')
-        for u, v, data in G.edges(data=True):
+        for _, _, data in G.edges(data=True):
             weight = data.get('weight', 1)
             min_weight = min(min_weight, weight)
             max_weight = max(max_weight, weight)
@@ -59,12 +76,13 @@ class ConversationalGraphBuilder(ABC):
             color = f'rgb({int(255 * normalized_weight)}, 0, {int(255 * (1 - normalized_weight))})'
             return color
 
+        # Add edges with weight-based colors
         for u, v, data in G.edges(data=True):
             weight = data.get('weight', 1)
             color = get_edge_color(weight)
             net.add_edge(u, v, value=weight, title=f'weight: {weight:.2f}', color=color)
 
-        # Set options for better visualization and enable the physics control panel
+        # Set options for better visualization
         net.set_options("""
         var options = {
             "nodes": {
@@ -116,16 +134,18 @@ class ConversationalGraphBuilder(ABC):
         }
         """)
 
-        # Specify the file path
-        file_path = os.path.join(dir_name, file_name + ".html")
-        print(f"Final HTML file path: {file_path}")
-
         # Save the visualization as an HTML file
+        file_path = os.path.join(dir_name, file_name + ".html")
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(net.generate_html())
         
+        # Log the mapping of communities to colors
+        print("Community Colors Mapping:")
+        for i, community in enumerate(communities):
+            print(f"Community {i + 1}: {', '.join(map(str, community))} - Color: {colors.rgb2hex(colormap(i)[:3])}")
+
         print(f"Graph visualization saved to {file_path}")
-        
+
     def create_sankey_diagram(g: nx.DiGraph, file_name):
         nodes = list(g.nodes)
 
