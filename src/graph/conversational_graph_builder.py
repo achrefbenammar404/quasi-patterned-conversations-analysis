@@ -39,7 +39,8 @@ class ConversationalGraphBuilder(ABC):
             file_name (str): Name of the output HTML file (without extension).
         """
         net = Network(notebook=True, width="100%", height="700px", directed=True, cdn_resources="in_line")
-
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
         # Add nodes and edges from NetworkX graph to PyVis network
         for node in G.nodes:
             net.add_node(node, label=str(node), title=str(node))
@@ -117,11 +118,14 @@ class ConversationalGraphBuilder(ABC):
 
         # Specify the file path
         file_path = os.path.join(dir_name, file_name + ".html")
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(net.html) 
         print(f"Final HTML file path: {file_path}")
 
-    
+        # Save the visualization as an HTML file
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(net.generate_html())
+        
+        print(f"Graph visualization saved to {file_path}")
+        
     def create_sankey_diagram(g: nx.DiGraph, file_name):
         nodes = list(g.nodes)
 
