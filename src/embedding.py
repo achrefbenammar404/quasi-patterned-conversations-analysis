@@ -42,8 +42,6 @@ class ExtractEmbed :
             List[Union[np.array , List[float]]]: list of embeddings 
         """
         # Make the API call to get the embeddings
-        if str(sentences) in cache : 
-            return cache[str(sentences)]
         embeddings = model.encode(sentences=sentences)
         return embeddings
     
