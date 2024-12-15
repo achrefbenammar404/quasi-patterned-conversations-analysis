@@ -32,7 +32,7 @@ class TransitionAnalysis:
 
         # Normalize the counts to probabilities
         row_sums = transition_matrix.sum(axis=1, keepdims=True)
-        transition_matrix = np.divide(transition_matrix, row_sums, where=row_sums != 0) * 100
+        transition_matrix = np.divide(transition_matrix, row_sums, where=row_sums != 0)
 
         return transition_matrix
 

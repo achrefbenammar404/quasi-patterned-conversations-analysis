@@ -76,8 +76,7 @@ def main(args):
     # Label clusters
     intent_by_cluster = Label.label_clusters_by_closest_utterances(closest_utterances, model=args.label_model)
     
-    # Generate cluster by intent
-    cluster_by_intent = Label.generate_cluster_by_intent(intent_by_cluster)
+
     
     # Add intents to conversations
     updated_data_with_intents = Label.add_intents_to_conversations(clustered_data, intent_by_cluster)
@@ -119,9 +118,9 @@ if __name__ == "__main__":
     parser.add_argument("--percentile", type=int, default=75, help="Percentile for outlier removal")
     parser.add_argument("--model_name", type=str, default='sentence-transformers/all-MiniLM-L12-v2', help="Model name for SentenceTransformer")
     parser.add_argument("--label_model", type=str, default='open-mixtral-8x22b', help="Model for labeling clusters by closest utterance")
-    parser.add_argument("--tau", type=float, default=0, help="Minimum weight for conversational graph edges")
+    parser.add_argument("--tau", type=float, default=10, help="Minimum weight for conversational graph edges")
     parser.add_argument("--top_k", type=int, default=1, help="Top k edges to keep in the conversational graph")
-    parser.add_argument("--alpha", type=int, default=1, help="alpha for adaptive threshold graph builder")
+    parser.add_argument("--alpha", type=float, default=1, help="alpha for adaptive threshold graph builder")
     parser.add_argument("--n_closest" , type=int , default=10, help="Number of the closest utterances to each cluster centroid to be passed to the llm for intent extraction")
     args = parser.parse_args()
     main(args)

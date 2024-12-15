@@ -22,21 +22,18 @@ class FilterReconnectGraphBuilder(ConversationalGraphBuilder) :
         Returns:
             nx.DiGraph: The created directed graph.
         """
-        G = nx.DiGraph()
         try : 
             tau = kwargs['tau']
             top_k = kwargs['top_k']
         except KeyError as ke : 
             print(f"Error occured while extracting params for filter and reconnect : {ke}")
 
-        for i, from_intent in intent_by_cluster.items():
-                weights = transition_matrix[int(i)]
-                top_indices = weights.argsort()[-top_k:][::-1]
-                for j in top_indices:
-                    if int(i) != int(j) and weights[j] > tau :
-                        to_intent = intent_by_cluster[str(j)]
-                        G.add_edge(from_intent, to_intent, weight=weights[j])
-        return G 
+        return FilterReconnectGraphBuilder.filter_and_reconnect(
+            transition_matrix = transition_matrix , 
+            intent_by_cluster = intent_by_cluster , 
+            min_weight = tau ,
+            top_k = top_k
+        )
     def remove_weakest_edge_in_cycles(G: nx.DiGraph) -> nx.DiGraph:
         """
         Detects cycles in the directed graph and removes the weakest edge (edge with the lowest weight) in each cycle.
