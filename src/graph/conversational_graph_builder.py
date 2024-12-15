@@ -115,11 +115,11 @@ class ConversationalGraphBuilder(ABC):
         }
         """)
 
-        # Generate the graph and save it to an HTML file
-        if not os.path.exists("output"):
-            os.mkdir("output")
-        net.show(os.path.join(dir_name , f"{file_name}.html"))
-
+        # Specify the file path
+        file_path = os.path.join(dir_name, file_name + ".html")
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(net.html) 
+        print(f"Final HTML file path: {file_path}")
 
     
     def create_sankey_diagram(g: nx.DiGraph, file_name):

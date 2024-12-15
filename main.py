@@ -12,7 +12,7 @@ from src.graph import (
     ThresholdGraphBuilder , 
     TopKGraphBuilder
 )
-
+import os 
 
 graph_builders  : Dict[str , ConversationalGraphBuilder ]= {
     'adaptive_threshold_graph_builder' : AdaptiveThresholdGraphBuilder , 
@@ -34,7 +34,7 @@ def main(args):
     sampled_data = get_random_n_pairs(customer_support_utterances, n=args.num_sampled_data)
     
     # Load the sentence transformer model
-    model = SentenceTransformer(model_name_or_path=args.model_name)
+    model = SentenceTransformer(model_name_or_path=args.model_name , device ="cuda" )
     
     # Embed the sampled data
     data = ExtractEmbed.embed_sampled_data(sampled_data, model , dataset_name = args.file_path)
@@ -112,7 +112,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
-    parser.add_argument("--file_path" , type = str , default = "data/ABCD.json" , help="path for json formatted conversations/dialogues" )
+    parser.add_argument("--file_path" , type = str , default = os.path.join("data" , "ABCD.json") , help="path for json formatted conversations/dialogues" )
     parser.add_argument("--num_sampled_data", type=int, default=1000, help="Number of sampled datapoints")
     parser.add_argument("--max_clusters", type=int, default=15, help="Maximum number of clusters for the elbow method")
     parser.add_argument("--min_clusters" ,type=int, default=9, help="Minimum number of clusters for the elbow method" )

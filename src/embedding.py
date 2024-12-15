@@ -3,9 +3,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm 
 from src.utils.utils import read_json_to_dict , save_dict_to_json
+import os 
 
-
-cache = read_json_to_dict("data/embedding_cache.json")
+cache = read_json_to_dict(os.path.join("data" , "embedding_cache.json"))
 
 class ExtractEmbed : 
     def extract_customer_support_utterances(
@@ -69,7 +69,7 @@ class ExtractEmbed :
                     {"utterance": sentence, "embedding": list(embedding)}
                     for sentence, embedding in zip(sentences, embeddings)
             ]
-        save_dict_to_json( cache , "data/embedding_cache.json" )
+        save_dict_to_json( cache ,os.path.join("data" , "embedding_cache.json") )
         return data 
             
     def extract_embeddings(data : Dict) -> List[Union[List[float] , np.array]] : 

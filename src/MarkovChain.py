@@ -96,7 +96,7 @@ class ConversationalGraph:
         # Generate the graph and save it to an HTML file
         if not os.path.exists("output"):
             os.mkdir("output")
-        net.show(f"output/{file_name}.html")
+        net.show(os.path.join("output" , f"{file_name}.json"))
 
     def remove_weakest_edge_in_cycles(G: nx.DiGraph) -> nx.DiGraph:
         """

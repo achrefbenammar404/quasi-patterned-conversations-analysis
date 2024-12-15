@@ -150,7 +150,7 @@ def save_processed_data(conversations: Dict[str, List[Dict[str, str]]], output_d
 
 def main():
     # File paths
-    input_file_path = 'data/abcd_v1.1.json'  # Update with your input JSON file path
+    input_file_path = os.path.join("data" , "abcd_v1.1.json")  # Update with your input JSON file path
     output_dir = 'data'
 
     # Ensure output directory exists

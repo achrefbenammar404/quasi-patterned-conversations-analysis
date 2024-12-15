@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 from typing import Literal , List
-
+import os 
 class Settings(BaseSettings):
     """
     Settings class for this application.
