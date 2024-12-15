@@ -1,8 +1,10 @@
 import json
-import random 
 import numpy as np
-from typing import Dict , Union
+from typing import Dict , Union , Callable
 import os
+import time
+import functools
+
 
 def read_json_file(file_path) : 
     try : 
@@ -146,3 +148,31 @@ def read_json_to_dict(file_path: str) -> dict:
         return {}
     except json.JSONDecodeError as e:
         return {}
+
+
+
+def exponential_backoff(retries: int = 5, backoff_in_seconds: int = 1, max_backoff: int = 32):
+    """
+    A decorator to add exponential backoff to a function in case of exceptions.
+    
+    Args:
+        retries (int): Maximum number of retries before giving up.
+        backoff_in_seconds (int): Initial backoff duration in seconds.
+        max_backoff (int): Maximum allowed backoff time in seconds.
+    """
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            backoff = backoff_in_seconds
+            while attempt < retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempt += 1
+                    if attempt == retries:
+                        raise e  # Raise the exception if max retries are exceeded
+                    time.sleep(min(backoff, max_backoff))  # Wait with capped exponential backoff
+                    backoff *= 2
+        return wrapper
+    return decorator

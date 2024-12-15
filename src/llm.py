@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import google.generativeai as genai
 from mistralai import Mistral
 from src.config import get_settings
+from src.utils.utils import exponential_backoff
 settings = get_settings()
 
 
@@ -47,7 +48,7 @@ class MistralLLM(LLM):
     def __init__(self, model_name: str):
         super().__init__(model_name, model_provider="Mistral")
         self.client = Mistral(api_key=settings.MISTRAL_API_KEY)
-        
+    @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
     def get_response(
         self,
         messages: List[Dict[str, Any]], 
@@ -65,7 +66,7 @@ class GoogleLLM(LLM):
         super().__init__(model_name, "Google")
         genai.configure(api_key=settings.GOOGLE_API_KEY)
         self.client = genai.GenerativeModel(model_name=self.model_name)
-    
+    @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
     def get_response(
         self,
         messages: List[str], 
