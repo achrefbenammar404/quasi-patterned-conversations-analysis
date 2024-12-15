@@ -42,8 +42,8 @@ class AdaptiveThresholdGraphBuilder(ConversationalGraphBuilder):
         for i in range(transition_matrix.shape[0]):
             for j in range(transition_matrix.shape[1]):
                 if (
-                    transition_matrix[i, j] < alpha * row_averages[i] and
-                    transition_matrix[i, j] < alpha * column_averages[j]
+                    transition_matrix[i, j] > alpha * row_averages[i] and
+                    transition_matrix[i, j] > alpha * column_averages[j]
                 ):
                     modified_matrix[i, j] = 0
         
