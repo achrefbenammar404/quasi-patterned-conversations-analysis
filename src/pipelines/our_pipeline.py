@@ -12,10 +12,7 @@ from src.graph import (
     ThresholdGraphBuilder , 
     TopKGraphBuilder
 )
-from src.evaluation import (
-    SemanticEvaluator,
-    StructuralEvaluator
-)
+from src.evaluation.evaluator import Evaluator
 
 graph_builders  : Dict[str , ConversationalGraphBuilder ]= {
     'adaptive_threshold_graph_builder' : AdaptiveThresholdGraphBuilder , 
@@ -24,9 +21,10 @@ graph_builders  : Dict[str , ConversationalGraphBuilder ]= {
     'top_k_graph_builder' : TopKGraphBuilder
 }
 
-
-
-def main( dataset_name : str , train_data , test_data , min_clusters , max_clusters , model : SentenceTransformer , alpha , tau , top_k , n_closest , label_model):
+def run( 
+    dataset_name : str , 
+    train_data , 
+    test_data , min_clusters , max_clusters , model : SentenceTransformer , alpha , tau , top_k , n_closest , label_model):
     
 
     
@@ -84,7 +82,6 @@ def main( dataset_name : str , train_data , test_data , min_clusters , max_clust
             alpha = alpha 
         )
     
-    structural_scores = {builder_name : StructuralEvaluator.evaluate(graph) for builder_name , graph in graphs.items() }
     
     
     test_utterances = ExtractEmbed.extract_utterances(test_data)
@@ -102,15 +99,8 @@ def main( dataset_name : str , train_data , test_data , min_clusters , max_clust
             intents.append(intent_by_cluster[str(test_data_assigned_cluster_ids[counter])])
             counter+=1
         test_ordered_intents.append(intents)  
-    print(test_ordered_intents)
-    semantic_scores = {
-        builder_name : SemanticEvaluator.evaluate(
-            graphs[builder_name] , test_ordered_intents , test_utterances , model
-        )
-    } 
     scores ={
-        "semantic_scores" : semantic_scores , 
-        "structural_scores" : structural_scores
+       builder_name : Evaluator.evaluate(graphs[builder_name] , ordered_intents=test_ordered_intents , ordered_utterances=test_utterances , model=model , num_samples=5000)
     }
     return graphs , scores 
 
