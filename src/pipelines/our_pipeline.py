@@ -93,21 +93,25 @@ def main( dataset_name : str , train_data , test_data , min_clusters , max_clust
     
     # Extract embeddings
     test_all_embeddings = ExtractEmbed.extract_embeddings(test_data)
-    test_data_assigned_cluster_ids = Cluster.assign_to_clustres(cluster_centers , test_all_embeddings)
-    test_ordered_intents = [
-        [intent_by_cluster[cluster_id] for cluster_id in cluster_ids ] 
-        for cluster_ids in test_data_assigned_cluster_ids
-    ]
-    
+    test_data_assigned_cluster_ids = Cluster.assign_to_clusters(cluster_centers , test_all_embeddings)
+    test_ordered_intents = []
+    counter = 0 
+    for conv in test_utterances : 
+        intents = []
+        for utterance in conv : 
+            intents.append(intent_by_cluster[str(test_data_assigned_cluster_ids[counter])])
+            counter+=1
+        test_ordered_intents.append(intents)  
+    print(test_ordered_intents)
     semantic_scores = {
         builder_name : SemanticEvaluator.evaluate(
-            graphs[builder_name] , test_ordered_intents , test_utterances
+            graphs[builder_name] , test_ordered_intents , test_utterances , model
         )
     } 
-    scores = {
+    scores ={
         "semantic_scores" : semantic_scores , 
         "structural_scores" : structural_scores
     }
-    return scores 
+    return graphs , scores 
 
 

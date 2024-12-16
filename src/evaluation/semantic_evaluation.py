@@ -100,8 +100,7 @@ class SemanticEvaluator:
                 else:
                     emb_utterance = model.encode(sentences=[utterance])
                     cache[utterance] = emb_utterance.tolist()
-
-                similarity = 1 - spatial.distance.cosine(emb_utterance, emb_intent)
+                similarity = 1 - spatial.distance.cosine(emb_utterance[0], emb_intent[0])
                 score += similarity
                 num += 1
         save_dict_to_json(cache , os.path.join("data" , "embedding_cache.json") )

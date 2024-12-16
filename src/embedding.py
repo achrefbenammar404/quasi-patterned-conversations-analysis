@@ -7,6 +7,8 @@ import os
 
 cache = read_json_to_dict(os.path.join("data" , "embedding_cache.json"))
 
+update_cache = False 
+
 class ExtractEmbed : 
     
     def extract_utterances(
@@ -56,6 +58,7 @@ class ExtractEmbed :
         return embeddings
     
     def embed_sampled_data(sampled_data : Dict , model : SentenceTransformer , dataset_name) -> Dict[str , Any] : 
+        global update_cache
         """method to embed the sampled conversations 
 
         Args:
@@ -71,13 +74,16 @@ class ExtractEmbed :
             if f"dataset_name_{key}" in cache : 
                 embeddings = np.array(cache[f"dataset_name_{key}"])
             else :
+                update_cache = True 
                 embeddings = ExtractEmbed.embed_sentences(sentences , model  , dataset_name )
                 cache[f"dataset_name_{key}"] = embeddings 
             data[key] = [
                     {"utterance": sentence, "embedding": list(embedding)}
                     for sentence, embedding in zip(sentences, embeddings)
             ]
-        save_dict_to_json( cache ,os.path.join("data" , "embedding_cache.json") )
+        if update_cache : 
+            save_dict_to_json( cache ,os.path.join("data" , "embedding_cache.json") )
+            
         return data 
             
     def extract_embeddings(data : Dict) -> List[Union[List[float] , np.array]] : 
