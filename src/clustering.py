@@ -49,6 +49,36 @@ class Cluster:
         plt.show()
         plt.close()
 
+    
+
+    def assign_to_clustres(cluster_centers: np.ndarray, embeddings: List[List[float]]) -> List[int]:
+        """returns a list of assigned cluster ids to the list of embeddings
+
+        Args:
+            cluster_centers (np.ndarray): array of cluster centroids, shape (num_clusters, embedding_dim)
+            embeddings (List[List[float]]): list of embeddings to be clustered, shape (num_samples, embedding_dim)
+
+        Returns:
+            List[int]: a list of cluster ids assigned to each embedding vector
+        """
+        # Convert embeddings to a numpy array for efficient computation
+        embeddings_arr = np.array(embeddings)  # shape: (num_samples, embedding_dim)
+        
+        # Compute the squared Euclidean distance between each embedding and each cluster center
+        # distances shape: (num_samples, num_clusters)
+        # Using broadcasting:
+        # embeddings_arr[:, None, :] creates a shape: (num_samples, 1, embedding_dim)
+        # cluster_centers[None, :, :] creates a shape: (1, num_clusters, embedding_dim)
+        # Subtracting and squaring will result in (num_samples, num_clusters, embedding_dim)
+        # Summation over the last dimension gives us distances for each embedding-center pair.
+        distances = np.sum((embeddings_arr[:, None, :] - cluster_centers[None, :, :]) ** 2, axis=2)
+        
+        # For each embedding, find the index of the cluster center that is closest
+        assigned_clusters = np.argmin(distances, axis=1)
+        
+        # Convert to a list of integers
+        return assigned_clusters.tolist()
+            
     def cluster_embeddings(data: Dict[str, List[Dict[str, Any]]], num_clusters: int, 
                            random_state: int = 42) -> Union[Dict, np.array, List[int], np.array]:
         """

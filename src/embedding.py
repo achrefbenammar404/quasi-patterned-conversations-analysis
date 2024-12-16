@@ -8,6 +8,16 @@ import os
 cache = read_json_to_dict(os.path.join("data" , "embedding_cache.json"))
 
 class ExtractEmbed : 
+    
+    def extract_utterances(
+        processed_formatted_conversations : dict 
+    ) -> List[List[str]] : 
+        customer_support_agent_utterances = []
+        for i , conv in enumerate(processed_formatted_conversations.values()) : 
+            customer_support_agent_utterances.append([
+                utterance["content"] for utterance in conv if utterance["role"] in["agent"]
+            ]) 
+        return customer_support_agent_utterances
     def extract_customer_support_utterances(
         processed_formatted_conversations : dict
         ) ->  Dict: 

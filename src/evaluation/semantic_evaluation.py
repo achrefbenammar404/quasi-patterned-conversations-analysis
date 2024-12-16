@@ -19,7 +19,6 @@ class SemanticEvaluator:
         graph: nx.DiGraph,
         ordered_intents: List[List[str]],
         ordered_utterances: List[List[str]],
-        real_flows: List[List[str]],
         model: SentenceTransformer
     ) -> Dict[str, float]:
         """
@@ -48,8 +47,15 @@ class SemanticEvaluator:
             }
         """
 
-        coverage_score = SemanticEvaluator.calculate_coverage(graph, real_flows)
-        semantic_coverage_score = SemanticEvaluator.calculate_semantic_coverage(ordered_intents, ordered_utterances, model)
+        coverage_score = SemanticEvaluator.calculate_coverage(
+            graph, 
+            ordered_intents
+        )
+        semantic_coverage_score = SemanticEvaluator.calculate_semantic_coverage(
+            ordered_intents, 
+            ordered_utterances, 
+            model
+        )
         return {
             "coverage": coverage_score,
             "semantic_coverage": semantic_coverage_score
