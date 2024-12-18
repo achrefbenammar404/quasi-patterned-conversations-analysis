@@ -1,11 +1,12 @@
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
+from functools import lru_cache
 import google.generativeai as genai
 from mistralai import Mistral
 from src.config import get_settings
 from src.utils.utils import exponential_backoff
-settings = get_settings()
 
+settings = get_settings()
 
 class LLM(ABC):
     def __init__(self, model_name: str, model_provider: str):
@@ -19,12 +20,10 @@ class LLM(ABC):
         self.client = None
 
     @abstractmethod
-    async def get_response(
-        self, messages: List[str]
-    ) -> str:
+    async def get_response(self, messages: List[str]) -> str:
         """
         Args:
-            messages (list):  A list of messages (conversation history).
+            messages (list): A list of messages (conversation history).
 
         Returns:
             str: The generated response.
@@ -43,20 +42,22 @@ class LLM(ABC):
         }
 
 
-
 class MistralLLM(LLM):
     def __init__(self, model_name: str):
         super().__init__(model_name, model_provider="Mistral")
         self.client = Mistral(api_key=settings.MISTRAL_API_KEY)
-    @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
-    def get_response(
-        self,
-        messages: List[Dict[str, Any]], 
-    ) -> str:
 
+    @lru_cache(maxsize= None )
+    @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
+    def get_response(self, messages: List[Dict[str, Any]]) -> str:
+        """
+        Cached method to get a response from the Mistral model.
+        """
+        # Convert the input list to a hashable tuple for caching compatibility
+        message_tuple = tuple((m['role'], m['content']) for m in messages)
         response = self.client.chat.complete(
-            model=self.model_name, 
-            messages=messages
+            model=self.model_name,
+            messages=list(messages),  # Convert back to a list for the client
         )
         return response.choices[0].message.content
 
@@ -66,25 +67,30 @@ class GoogleLLM(LLM):
         super().__init__(model_name, "Google")
         genai.configure(api_key=settings.GOOGLE_API_KEY)
         self.client = genai.GenerativeModel(model_name=self.model_name)
-    @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
-    def get_response(
-        self,
-        messages: List[str], 
-    ) -> str:
-        modified_messages = []
 
+    @lru_cache(maxsize= None )
+    @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
+    def get_response(self, messages: List[str]) -> str:
+        """
+        Cached method to get a response from the Google model.
+        """
+        # Convert the input list to a hashable tuple for caching compatibility
+        message_tuple = tuple((m['role'], m['content']) for m in messages)
+
+        # Modify messages for compatibility with the Google model
+        modified_messages = []
         for message in messages:
-            # Modify the keys as requested
             role = message['role']
             if role == 'assistant':
                 role = 'model'
-            elif role == 'system' : 
+            elif role == 'system':
                 role = 'user'
             modified_message = {
                 'role': role,
-                'parts': message['content']  # Changing 'content' to 'parts'
+                'parts': message['content'],  # Changing 'content' to 'parts'
             }
             modified_messages.append(modified_message)
+
         if len(modified_messages) > 0:
             chat = self.client.start_chat(history=modified_messages[:-1])
             response = chat.send_message(modified_messages[-1], stream=False)
@@ -94,14 +100,9 @@ class GoogleLLM(LLM):
         return response.text
 
 
-
-class CollectionLLM : 
-    llm_collection : Dict[str , LLM]= {
-            "gemini-1.5-pro": GoogleLLM(model_name="gemini-1.5-pro") ,   
-            "gemini-1.5-flash" : GoogleLLM(model_name="gemini-1.5-flash") , 
-            "open-mixtral-8x22b" : MistralLLM("open-mixtral-8x22b")
+class CollectionLLM:
+    llm_collection: Dict[str, LLM] = {
+        "gemini-1.5-pro": GoogleLLM(model_name="gemini-1.5-pro"),
+        "gemini-1.5-flash": GoogleLLM(model_name="gemini-1.5-flash"),
+        "open-mixtral-8x22b": MistralLLM("open-mixtral-8x22b"),
     }
-
-
-
-
