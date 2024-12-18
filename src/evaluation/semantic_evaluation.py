@@ -6,7 +6,7 @@ import os
 import numpy as np 
 from scipy import spatial
 
-cache = read_json_to_dict(os.path.join("data" , "embedding_cache.json"))
+cache_semantic_evaluation= {}
 
 class SemanticEvaluator:
     """
@@ -89,21 +89,20 @@ class SemanticEvaluator:
         num = 0
         for intents, utterances in zip(ordered_intents, ordered_utterances):
             for intent, utterance in zip(intents, utterances):
-                if intent in cache:
-                    emb_intent = np.array(cache[intent])
+                if intent in cache_semantic_evaluation:
+                    emb_intent = np.array(cache_semantic_evaluation[intent])
                 else:
                     emb_intent = model.encode(sentences=[intent])
-                    cache[intent] = emb_intent.tolist()
+                    cache_semantic_evaluation[intent] = emb_intent.tolist()
 
-                if utterance in cache:
-                    emb_utterance = np.array(cache[utterance])
+                if utterance in cache_semantic_evaluation:
+                    emb_utterance = np.array(cache_semantic_evaluation[utterance])
                 else:
                     emb_utterance = model.encode(sentences=[utterance])
-                    cache[utterance] = emb_utterance.tolist()
+                    cache_semantic_evaluation[utterance] = emb_utterance.tolist()
                 similarity = 1 - spatial.distance.cosine(emb_utterance[0], emb_intent[0])
                 score += similarity
                 num += 1
-        save_dict_to_json(cache , os.path.join("data" , "embedding_cache.json") )
         if num > 0:
             return score / num
         return 0.0

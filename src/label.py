@@ -2,6 +2,12 @@ from typing import Dict, List, Any
 from src.llm import CollectionLLM
 from src.utils.utils import pre_process_llm_output
 import json
+from collections import Counter
+from typing import Dict, List
+import spacy
+
+# Load the spaCy model
+nlp = spacy.load("en_core_web_md")
 
 class Label:
 
@@ -17,6 +23,40 @@ class Label:
         """
         return {value: key for key, value in intent_by_cluster.items()}
 
+
+    def label_clusters_by_verbphrases(closest_utterances: Dict[int, List[str]] ) -> Dict[str, str]:
+        """
+        Labels clusters by analyzing the closest utterances and extracting the most frequent verb phrases.
+
+        Args:
+            closest_utterances (Dict[int, List[str]]): Dictionary mapping cluster indices to lists of closest utterances.
+            model (str): The model name to be used from the CollectionLLM.
+
+        Returns:
+            Dict[str, str]: Dictionary mapping cluster indices to their most frequent verb phrases.
+        """
+        intent_by_cluster = {}
+
+        for cluster, utterances in closest_utterances.items():
+            all_verb_phrases = []
+
+            # Extract verb phrases from each utterance
+            for utterance in utterances:
+                verb_phrases = Label.extract_verb_phrases(utterance)
+                all_verb_phrases.extend(verb_phrases)
+
+            # Count the frequency of each verb phrase
+            verb_phrase_counter = Counter(all_verb_phrases)
+
+            # Identify the most common verb phrase
+            if verb_phrase_counter:
+                most_common_verb_phrase, _ = verb_phrase_counter.most_common(1)[0]
+                intent_by_cluster[str(cluster)] = most_common_verb_phrase
+            else:
+                # In case no verb phrases are found
+                intent_by_cluster[str(cluster)] = "No verb phrase detected"
+
+        return intent_by_cluster
     def label_clusters_by_closest_utterances(closest_utterances: Dict[int, List[str]], 
                                              model: str) -> Dict[str, str]:
         """
@@ -113,3 +153,25 @@ class Label:
                 if "ordered_intents" in item:
                     ordered_intents.append(item["ordered_intents"])
         return ordered_intents
+
+    
+    def extract_verb_phrases(utterance: str) -> List[str]:
+        """
+        Extract verb phrases from a given utterance using spaCy.
+
+        Args:
+            utterance (str): The text of the utterance.
+
+        Returns:
+            List[str]: List of verb phrases in the utterance.
+        """
+
+        doc = nlp(utterance["content"])
+        verb_phrases = []
+
+        # Iterate over tokens and extract verb phrases using dependency parsing
+        for token in doc:
+            if 'VERB' in token.pos_ and token.dep_ in ['ROOT', 'xcomp', 'ccomp']:  # Identify main verbs and their complements
+                verb_phrase = token.lemma_
+                verb_phrases.append(verb_phrase)
+        return verb_phrases

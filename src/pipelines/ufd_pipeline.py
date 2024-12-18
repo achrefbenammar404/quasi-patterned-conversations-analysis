@@ -7,24 +7,22 @@ from src.utils.utils import *
 from sentence_transformers import SentenceTransformer
 from src.graph import (
     ConversationalGraphBuilder , 
-    AdaptiveThresholdGraphBuilder , 
-    FilterReconnectGraphBuilder , 
-    ThresholdGraphBuilder , 
-    TopKGraphBuilder
+    ThresholdGraphBuilder 
 )
 from src.evaluation.evaluator import Evaluator
 
 graph_builders  : Dict[str , ConversationalGraphBuilder ]= {
-    'adaptive_threshold_graph_builder' : AdaptiveThresholdGraphBuilder , 
-    'filter_reconnect_graph_builder' : FilterReconnectGraphBuilder , 
     'threshold_graph_builder' : ThresholdGraphBuilder , 
-    'top_k_graph_builder' : TopKGraphBuilder
 }
-
+lebel_extractors = {
+    
+}
 def run( 
     dataset_name : str , 
     train_data , 
-    test_data , min_clusters , max_clusters , model : SentenceTransformer , alpha , tau , top_k , n_closest , label_model):
+    test_data , min_clusters , max_clusters , model : SentenceTransformer , 
+    tau 
+    ):
     
 
     
@@ -46,18 +44,17 @@ def run(
     # Cluster the embeddings
     clustered_data, embeddings, labels, cluster_centers = Cluster.cluster_embeddings(data, num_clusters=optimal_cluster_number)
     
-    # Extract closest utterances
-    n_closest = n_closest
-    closest_utterances = Cluster.extract_closest_embeddings(clustered_data, embeddings, labels, cluster_centers, n=n_closest)
+    closest_utterances = Cluster.extract_closest_embeddings(clustered_data, embeddings, labels, cluster_centers, n=10**100)
     
     # Label clusters
-    intent_by_cluster = Label.label_clusters_by_closest_utterances(closest_utterances, model=label_model)
+    intent_by_cluster = Label.label_clusters_by_verbphrases(closest_utterances)
     
 
     
     # Add intents to conversations
     updated_data_with_intents = Label.add_intents_to_conversations(clustered_data, intent_by_cluster)
-        
+
+    
     # Extract ordered intents
     ordered_intents = Label.extract_ordered_intents(updated_data_with_intents)
     sampled_data = None 
@@ -74,8 +71,6 @@ def run(
             transition_matrix = transition_matrix, 
             intent_by_cluster = intent_by_cluster, 
             tau=tau, 
-            top_k=top_k, 
-            alpha = alpha 
         )
     
     
@@ -96,7 +91,7 @@ def run(
             counter+=1
         test_ordered_intents.append(intents)  
     scores ={
-       builder_name : Evaluator.evaluate(graph , ordered_intents=test_ordered_intents , ordered_utterances=test_utterances , model=model , num_samples=5000)
+       builder_name : Evaluator.evaluate(graph , ordered_intents=test_ordered_intents , ordered_utterances=test_utterances , model=model , num_samples=5000) 
        for builder_name , graph in graphs.items()
     }
     return graphs , scores 

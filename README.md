@@ -78,6 +78,7 @@ Ensure this file is placed in the `data/` directory under the name `processed_fo
     ```
 4. Install the required dependencies:
     ```sh
+    python -m spacy download en_core_web_md
     pip install -r requirements.txt
     ```
 

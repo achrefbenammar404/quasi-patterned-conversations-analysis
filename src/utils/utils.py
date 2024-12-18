@@ -98,7 +98,6 @@ def read_transition_matrix(filename='transition_matrix_ada.npy'):
 
 
 def pre_process_llm_output(function_calling_message: str) -> Dict[str, Union[str, Dict]]:
-    print(f"preprocess-llm-output input : {function_calling_message}")
     start_idx = function_calling_message.find('{')
     end_idx = function_calling_message.rfind('}')
     
@@ -119,7 +118,6 @@ def pre_process_llm_output(function_calling_message: str) -> Dict[str, Union[str
                     processed_str.append(char)
             
             processed_json_str = ''.join(processed_str)
-            print(f"Processed JSON string: {processed_json_str}")
             
             # Attempt to load the processed string as JSON
             func_call = json.loads(processed_json_str)
