@@ -57,7 +57,7 @@ class StructuralEvaluator:
         return max(hyps) if hyps else 0.0
 
     @staticmethod
-    def evaluate(G: nx.DiGraph, num_samples: int = 5000) -> Dict[str, Any]:
+    def evaluate(G: nx.DiGraph, num_samples: int = 500) -> Dict[str, Any]:
         """
         Evaluate structural properties of the given directed graph: 
         delta hyperbolicity, branching factor, and the number of cycles.
@@ -79,10 +79,10 @@ class StructuralEvaluator:
                 "num_cycles": int
             }
         """
-
+        print("structural delta hyperbolicity calculation...")
         # Compute delta hyperbolicity
         delta_hyperbolicity = StructuralEvaluator.hyperbolicity_sample(G, num_samples=num_samples)
-
+        print("branching factor and cycles count calculation...")
         # Compute branching factor: average out-degree = |E| / |V|
         num_nodes = G.number_of_nodes()
         num_edges = G.number_of_edges()

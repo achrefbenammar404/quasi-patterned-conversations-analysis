@@ -8,10 +8,19 @@ from src.utils.utils import *
 from sentence_transformers import SentenceTransformer
 from src.graph import (
     ConversationalGraphBuilder,
-    ThresholdGraphBuilder
+    AdaptiveThresholdGraphBuilder,
+    FilterReconnectGraphBuilder,
+    ThresholdGraphBuilder,
+    TopKGraphBuilder
 )
 from src.evaluation.evaluator import Evaluator
 
+graph_builders: Dict[str, ConversationalGraphBuilder] = {
+    'adaptive_threshold_graph_builder': AdaptiveThresholdGraphBuilder,
+    'filter_reconnect_graph_builder': FilterReconnectGraphBuilder,
+    'threshold_graph_builder': ThresholdGraphBuilder,
+    'top_k_graph_builder': TopKGraphBuilder
+}
 
 def run(
     dataset_name: str,
@@ -20,9 +29,10 @@ def run(
     min_clusters,
     max_clusters,
     model: SentenceTransformer,
-    tau
+    tau,
+    n_closest,
+    label_model,
 ):
-    builder = ThresholdGraphBuilder
     print(f"Starting the pipeline for dataset: {dataset_name}")
 
     # Embed the sampled data
@@ -31,11 +41,11 @@ def run(
     print(f"Embedding complete. Total conversations embedded: { len(data)}")
 
     # Extract embeddings
-    print("Extracting embeddings...")
+    print("Extracting embeddings from train data...")
     all_embeddings = ExtractEmbed.extract_embeddings(data)
     print("Embeddings extracted")
 
-    # Determine the optimal number of clusters
+    # Determine optimal number of clusters
     if min_clusters != max_clusters:
         print(f"Using the elbow method to determine optimal clusters (min: {min_clusters}, max: { max_clusters})")
         Cluster.elbow_method(all_embeddings, min_clusters=min_clusters, max_clusters=max_clusters)
@@ -54,13 +64,13 @@ def run(
     # Extract closest utterances
     print("Extracting closest utterances for each cluster...")
     closest_utterances = Cluster.extract_closest_embeddings(
-        clustered_data, embeddings, labels, cluster_centers, n=80
+        clustered_data, embeddings, labels, cluster_centers, n=n_closest
     )
     print("Closest utterances extracted.")
 
     # Label clusters
-    print("Labeling clusters...")
-    intent_by_cluster = Label.label_clusters_by_verbphrases(closest_utterances)
+    print("Labeling clusters using the specified model...")
+    intent_by_cluster = Label.label_clusters_by_closest_utterances(closest_utterances, model=label_model)
     print(f"Cluster labeling complete. Total intents: {len(intent_by_cluster)}" )
 
     # Add intents to conversations
@@ -78,12 +88,13 @@ def run(
     transition_matrix = TransitionAnalysis.create_transition_matrix(ordered_intents, intent_by_cluster)
     print("Transition matrix created.")
 
-    # Create and plot conversational graph
+    builder = graph_builders["threshold_graph_builder"]
+    # Build graph
     print(f"Creating directed graph with tau={tau}" )
     graph = builder.create_directed_graph(
         transition_matrix=transition_matrix,
         intent_by_cluster=intent_by_cluster,
-        tau=tau,
+        tau=0
     )
     print("Directed graph created.")
 
@@ -98,8 +109,8 @@ def run(
     test_data_assigned_cluster_ids = Cluster.assign_to_clusters(cluster_centers, test_all_embeddings)
     print("Test data assigned to clusters.")
 
-    # Evaluate the model
-    print("Evaluating the model...")
+    # Evaluate the graph
+    print("Evaluating the graph...")
     test_ordered_intents = []
     counter = 0
     for conv in test_utterances:
@@ -113,8 +124,7 @@ def run(
         ordered_intents=test_ordered_intents,
         ordered_utterances=test_utterances,
         model=model,
-        num_samples=5000,
+        num_samples=5000
     )
     print(f"Evaluation complete. Scores: { str(scores)}")
-
     return graph, scores

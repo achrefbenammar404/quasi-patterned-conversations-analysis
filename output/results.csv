@@ -1,0 +1,2 @@
+approach_name,graph_filtering_alg,tau,alpha,top_k,num_clusters,semantic_coverage,coverage,branching_factor,delta_hyperbolicity,num_cycles
+UFD,threshold_graph_builder,0.1,,,15,0.12774775480554296,0.9995022399203584,1.0,0.0,2

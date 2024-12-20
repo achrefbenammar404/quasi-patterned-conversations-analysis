@@ -46,11 +46,12 @@ class SemanticEvaluator:
                 "semantic_coverage": float   # The average cosine similarity-based semantic coverage between intents and utterances
             }
         """
-
+        print("coverage calculation ...")
         coverage_score = SemanticEvaluator.calculate_coverage(
             graph, 
             ordered_intents
         )
+        print("semantic coverage calculation...")
         semantic_coverage_score = SemanticEvaluator.calculate_semantic_coverage(
             ordered_intents, 
             ordered_utterances, 
