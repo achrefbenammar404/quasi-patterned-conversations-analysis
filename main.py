@@ -13,7 +13,6 @@ from src.graph import (
     TopKGraphBuilder
 )
 from src.evaluation.evaluator import Evaluator
-
 import os 
 
 graph_builders  : Dict[str , ConversationalGraphBuilder ]= {
@@ -34,12 +33,12 @@ def main(args):
     
     # Sample data points
     sampled_data = get_random_n_pairs(customer_support_utterances, n=args.num_sampled_data)
-    
+    train_data, test_data = split_data(0.8, data=sampled_data)
     # Load the sentence transformer model
     model = SentenceTransformer(model_name_or_path=args.model_name , device ="cuda" )
     
     # Embed the sampled data
-    data = ExtractEmbed.embed_sampled_data(sampled_data, model , dataset_name = args.file_path)
+    data = ExtractEmbed.embed_sampled_data(train_data, model , dataset_name = args.file_path)
     
     # Extract embeddings
     all_embeddings = ExtractEmbed.extract_embeddings(data)
@@ -98,8 +97,9 @@ def main(args):
     
     # evaluation 
     print("Embedding test data...")
-    test_utterances = ExtractEmbed.extract_utterances(test_data)
-    test_data = ExtractEmbed.embed_sampled_data(test_data, model, dataset_name=args.args.file_path)
+    print(test_data[list(test_data.keys())[0]])
+    test_utterances = ExtractEmbed.extract_utterances_test(test_data)
+    test_data = ExtractEmbed.embed_sampled_data(test_data, model, dataset_name=args.file_path)
     test_all_embeddings = ExtractEmbed.extract_embeddings(test_data)
     print("Test data embedded")
 
@@ -129,18 +129,32 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
     parser.add_argument("--file_path" , type = str , default = os.path.join("data" , "ABCD.json") , help="path for json formatted conversations/dialogues" )
+    parser.add_argument("--split_ratio", type=float, default=0.8, help="Split ratio between 'train' and 'test' sets")
     parser.add_argument("--num_sampled_data", type=int, default=1000, help="Number of sampled datapoints")
     parser.add_argument("--max_clusters", type=int, default=15, help="Maximum number of clusters for the elbow method")
     parser.add_argument("--min_clusters" ,type=int, default=9, help="Minimum number of clusters for the elbow method" )
     parser.add_argument("--model_name", type=str, default='sentence-transformers/all-MiniLM-L12-v2', help="Model name for SentenceTransformer")
     parser.add_argument("--label_model", type=str, default='open-mixtral-8x22b', help="Model for labeling clusters by closest utterance")
-    parser.add_argument("--tau", type=float, default=10, help="Minimum weight for conversational graph edges")
+    parser.add_argument("--tau", type=float, default=0.1, help="Minimum weight for conversational graph edges")
     parser.add_argument("--top_k", type=int, default=1, help="Top k edges to keep in the conversational graph")
     parser.add_argument("--alpha", type=float, default=1, help="alpha for adaptive threshold graph builder")
     parser.add_argument("--n_closest" , type=int , default=10, help="Number of the closest utterances to each cluster centroid to be passed to the llm for intent extraction")
-    parser.add_argument("--approach" , type=str , default='our_approach', help="The approach to use when applying the graph analysis")
-    parser.add_argument("--filter_algorithm" , type=str , default='filter_reconnect', help="The filtering approach of the conversational graph")
+    parser.add_argument(
+        "--approach",
+        type=str,
+        default="our_approach",
+        choices=["our_approach", "ferreira2024", "carvalho2024"],
+        help="The approach to use when applying the graph analysis (choices: our_approach, ferreira2024, carvalho2024)."
+    )
 
+    parser.add_argument(
+        "--filter_algorithm",
+        type=str,
+        default="filter_reconnect",
+        choices=["adaptive_threshold", "filter_reconnect", "threshold", "top_k"],
+        help="The filtering algorithm for the conversational graph (choices: adaptive_threshold, filter_reconnect, threshold, top_k)."
+    )
+    
 
     args = parser.parse_args()
     main(args)

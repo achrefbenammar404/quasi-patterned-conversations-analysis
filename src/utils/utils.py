@@ -5,6 +5,25 @@ import os
 import time
 import functools
 
+def extract_utterances(data: dict, *roles) -> dict:
+    """Extract utterances for a specific role from each conversation."""
+    return {
+        key: [utt for utt in conv if utt["role"] in roles ]
+        for key, conv in data.items()
+    }
+
+def split_data(coff: float, data: dict):
+    """Split data into train and test sets according to a coefficient."""
+    train_data_source = {
+        str(key): data[key]
+        for key in list(data.keys())[ : int(coff * len(data))]
+    }
+    test_data_source = {
+        str(key): data[key]
+        for key in list(data.keys())[ int(coff * len(data)) : len(data)]
+    }
+    return train_data_source, test_data_source
+
 
 def read_json_file(file_path) : 
     try : 

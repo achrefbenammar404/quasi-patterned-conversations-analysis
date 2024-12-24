@@ -8,7 +8,9 @@ cache = {}
 
 
 class ExtractEmbed : 
-    
+    def extract_utterances_test(test_data : dict 
+    ) -> List[List[str]] : 
+        return list(test_data.values())
     def extract_utterances(
         processed_formatted_conversations : dict 
     ) -> List[List[str]] : 
