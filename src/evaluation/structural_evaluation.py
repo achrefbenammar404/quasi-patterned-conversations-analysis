@@ -57,7 +57,7 @@ class StructuralEvaluator:
         return max(hyps) if hyps else 0.0
 
     @staticmethod
-    def evaluate(G: nx.DiGraph, num_samples: int = 500) -> Dict[str, Any]:
+    def evaluate(G: nx.DiGraph, num_samples: int = 50000) -> Dict[str, Any]:
         """
         Evaluate structural properties of the given directed graph: 
         delta hyperbolicity, branching factor, and the number of cycles.
