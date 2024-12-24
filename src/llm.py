@@ -20,7 +20,7 @@ class LLM(ABC):
         self.client = None
 
     @abstractmethod
-    async def get_response(self, messages: List[str]) -> str:
+    def get_response(self, messages: List[Dict[str , str ]]) -> str:
         """
         Args:
             messages (list): A list of messages (conversation history).
@@ -30,7 +30,7 @@ class LLM(ABC):
         """
         pass
 
-    async def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> Dict[str, Any]:
         """
         Abstract method to return info of the LLM model.
         Returns:
@@ -47,9 +47,8 @@ class MistralLLM(LLM):
         super().__init__(model_name, model_provider="Mistral")
         self.client = Mistral(api_key=settings.MISTRAL_API_KEY)
 
-    @lru_cache(maxsize= None )
     @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
-    def get_response(self, messages: List[Dict[str, Any]]) -> str:
+    def get_response(self,  messages: List[Dict[str , str ]]) -> str:
         """
         Cached method to get a response from the Mistral model.
         """
@@ -68,15 +67,11 @@ class GoogleLLM(LLM):
         genai.configure(api_key=settings.GOOGLE_API_KEY)
         self.client = genai.GenerativeModel(model_name=self.model_name)
 
-    @lru_cache(maxsize= None )
     @exponential_backoff(retries=10, backoff_in_seconds=2, max_backoff=16)
-    def get_response(self, messages: List[str]) -> str:
+    def get_response(self, messages: List[Dict[str , str ]]) -> str:
         """
         Cached method to get a response from the Google model.
         """
-        # Convert the input list to a hashable tuple for caching compatibility
-        message_tuple = tuple((m['role'], m['content']) for m in messages)
-
         # Modify messages for compatibility with the Google model
         modified_messages = []
         for message in messages:
