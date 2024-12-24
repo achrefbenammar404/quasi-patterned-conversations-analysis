@@ -17,3 +17,4 @@ uvicorn==0.30.6
 torch==2.5.1+cu118
 torchvision==0.20.1+cu118
 torchaudio==2.5.1+cu118
+spacy==3.8.3
