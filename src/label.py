@@ -165,8 +165,10 @@ class Label:
         Returns:
             List[str]: List of verb phrases in the utterance.
         """
-
-        doc = nlp(utterance["content"])
+        if isinstance(utterance , str) : 
+            doc = nlp(utterance)
+        elif isinstance(utterance , dict ) : 
+            doc = nlp(utterance["content"])
         verb_phrases = []
 
         # Iterate over tokens and extract verb phrases using dependency parsing

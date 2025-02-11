@@ -62,7 +62,7 @@ def main(args):
     if args.approach in ["our_approach" , "ferreira2024"] :
     # Label clusters
         intent_by_cluster = Label.label_clusters_by_closest_utterances(closest_utterances, model=args.label_model)
-    elif args.appraoch in ["carvalho2024"] : 
+    elif args.approach in ["carvalho2024"] : 
         intent_by_cluster = Label.label_clusters_by_verbphrases(closest_utterances)
 
     
@@ -125,7 +125,7 @@ def main(args):
         num_samples=5000,
     )
     print(f"Evaluation complete. Scores: { str(scores)}")
-
+    return scores
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quasi-patterned Conversations Analysis")
     parser.add_argument("--file_path" , type = str , default = os.path.join("data" , "ABCD.json") , help="path for json formatted conversations/dialogues" )

@@ -28,12 +28,30 @@ class TopKGraphBuilder(ConversationalGraphBuilder) :
             top_k = kwargs['top_k']
         except KeyError as ke : 
             print("Error occured while extracting params for top_k filtering : {ke}")
+            
+        for i, from_intent in intent_by_cluster.items():
+            G.add_node(from_intent)
+
+
+        for intent in intent_by_cluster.values():
+            G.add_node(intent)
 
         for i, from_intent in intent_by_cluster.items():
-                weights = transition_matrix[int(i)]
-                top_indices = weights.argsort()[-top_k:][::-1]
-                for j in top_indices:
-                    if int(i) != int(j) and weights[j] > tau :
-                        to_intent = intent_by_cluster[str(j)]
-                        G.add_edge(from_intent, to_intent, weight=weights[j])
-        return G 
+            weights =transition_matrix[int(i)]
+            for j, weight in enumerate(weights):
+                if weight < tau:
+                    continue
+                to_intent = intent_by_cluster[str(j)]
+                G .add_edge(from_intent, to_intent, weight=weight)
+        filtered_graph = G.copy()
+
+        for node in G.nodes:
+            outgoing_edges = [(node, neighbor, data) for neighbor, data in G[node].items()]
+            outgoing_edges = sorted(outgoing_edges, key=lambda x: x[2].get('weight', 0), reverse=True)
+            edges_to_keep = outgoing_edges[:top_k]
+            neighbors_to_keep = {edge[1] for edge in edges_to_keep}
+            for neighbor in list(G[node].keys()):
+                if neighbor not in neighbors_to_keep:
+                    filtered_graph.remove_edge(node, neighbor)
+
+        return filtered_graph
