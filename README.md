@@ -1,121 +1,162 @@
-# Quasi-patterned Conversations Analysis
+<h1 align="center">A Computational Approach to Modeling Conversational Systems</h1>
+<h3 align="center">Analyzing Large-Scale Quasi-Patterned Dialogue Flows</h3>
 
-## Overview
+<p align="center">
+  <img src="https://utm.rnu.tn/utm/images/utm-og-img.png" alt="FST Logo" width="100"/>
+  <img src="https://insat.rnu.tn/assets/images/logo_c.png" alt="INSAT logo" width="100">
+</p>
 
-This repository supports the research paper titled "[A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](Analyzing_Large_Scale_Quasi_Patterned_Dialogue_Flows.pdf)." The project introduces a novel computational framework for constructing conversational graphs that effectively capture the flow and patterns within quasi-patterned sets of conversations. By leveraging advanced embedding techniques, clustering, and large language models, this approach aims to enhance the analysis and visualization of conversational dynamics, particularly in large-scale dialogue datasets.
+<p align="center">
+  <strong>Official Implementation of the IEEE EUROCON 2025 Paper <br>A Computational Approach to Modeling Conversational Systems</h1>
+Analyzing Large-Scale Quasi-Patterned Dialogue Flows</strong><br>
+  <em>Mohamed Achref Ben Ammar</em> – National Institute of Applied Science and Technology (INSAT), University of Carthage, Tunisia<br>
+  <em>Mohamed Taha Bennani</em> – University of Tunis El Manar (FST)
+</p>
 
-### Conversational Graph Visualization
+---
 
-Below is a view of the generated conversational graph using the Filter\&Reconnect method:
-<img src="output/filter-and-reconnect-graph.png" alt="Filter and Reconnect Graph" width="400"/>
+## Abstract
 
+The rise of large language models (LLMs) has led to increasingly complex and loosely structured dialogues. In this work, we introduce a **computational graph-based framework** that models these quasi-patterned conversations. Central to our approach is the **Filter & Reconnect** method, a graph simplification technique that reduces conversational noise while preserving semantic structure.
 
-For a detailed explanation of the approach, please refer to the full research paper: [A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows](Analyzing_Large_Scale_Quasi_Patterned_Dialogue_Flows.pdf).
+Key outcomes:
+- **2.06× improvement in semantic metric S** over prior methods
+- **0 δ-hyperbolicity**, enforcing a tree-like, interpretable structure
 
-## Methodology
+This framework offers practical tools for monitoring and analyzing chatbot behavior, dialogue management systems, and user interaction patterns at scale.
 
-The proposed methodology for constructing conversational graphs involves the following key steps:
+---
 
-1. **Utterance Embedding**: Embedding each utterance using a Sentence Transformer model (e.g., all-MiniLM-L12-v2).
-2. **Clustering**: Applying K-means++ clustering to group similar utterances, using the elbow method to determine the optimal number of clusters.
-3. **Outlier Removal**: Identifying and removing outliers based on their distances from cluster centroids.
-4. **Intent Extraction**: Extracting intents from clustered utterances using large language models (LLMs).
-5. **Transition Matrix Construction**: Building a transition matrix to analyze the flow between different conversational intents.
-6. **Conversational Graph Construction**: Creating directed graphs that represent conversational flows using various graph simplification techniques, including the novel Filter\&Reconnect method.
+## Methodology Overview
 
-These steps are designed to provide a scalable and interpretable solution for analyzing complex conversational datasets, with practical implications for improving automated conversational systems.
+The methodology consists of the following core steps:
 
-## Data Source
+1. **Utterance Extraction**  
+   Conversational utterances are extracted from a structured dataset consisting of multi-turn dialogues.
 
-The study uses data from the [ABCD v1.1](https://github.com/asappresearch/abcd/blob/master/data/abcd_v1.1.json.gz) dataset, which contains customer support conversations. This dataset is ideal for this research as it exhibits quasi-patterned conversational flows, which are central to the proposed analysis.
+2. **Semantic Embedding**  
+   Each utterance is transformed into a dense vector using a pre-trained text embedding model, capturing the semantic meaning of the message.
 
-### Using Custom Datasets
+3. **Clustering of Intents**  
+   Using hierarchical clustering techniques and a large language model (LLM), similar utterances are grouped together to identify key communicative intents.
 
-If you'd like to use this framework on other conversational datasets, ensure the data directory contains a JSON file where:
+4. **Markov Chain Construction**  
+   A Markov Chain is built where nodes represent clustered intents and edges represent transitions between them in the dialogue flow.
 
-- Keys are conversation IDs.
-- Values are a list of dictionaries, where each dictionary represents an utterance.
-- Each dictionary should contain:
-  - `role`: The role of the speaker (`"agent"`, `"customer"`, or `"action"`).
-  - `content`: The content of the utterance.
+5. **Graph Simplification: Filter & Reconnect**  
+   The conversational graph undergoes a noise reduction process by removing irrelevant transitions while preserving semantic and structural coherence.
 
-Example structure:
+6. **Flow Pattern Analysis**  
+   The resulting graph is then analyzed to identify quasi-patterned conversational flows, enabling improved interpretability and dialogue system evaluation.
+
+---
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate        # Linux/MacOS
+venv\Scripts\activate           # Windows
+
+# Install required packages
+pip install -r requirements.txt
+
+# Download required NLP model
+python -m spacy download en_core_web_md
+```
+
+### 2. Create a `.env` File
+
+At the project root, create a `.env` file and configure the following environment variables:
+
+```dotenv
+# Python setup
+PYTHONPATH=${PYTHONPATH}:.
+
+# Environment mode
+ENVIRONMENT="local"
+
+# API Keys
+GOOGLE_API_KEY=
+MISTRAL_API_KEY=
+```
+
+> Ensure your API keys are valid and have the appropriate access privileges.
+
+---
+
+## Input Data Format
+
+This framework supports **ABCD v1.1**, **MultiWOZ 2.0**, or any **custom dataset** formatted as follows:
 
 ```json
 {
   "conversation_1": [
     {"role": "agent", "content": "Hello, how can I help you today?"},
     {"role": "customer", "content": "I need assistance with my account."},
-    {"role": "action", "content": "Agent opened account details."},
-    {"role": "agent", "content": "I can help with that. What seems to be the issue?"}
-  ],
-  "conversation_2": [
-    {"role": "customer", "content": "My internet connection is down."},
-    {"role": "agent", "content": "Let me check the status of your connection."},
-    {"role": "action", "content": "Agent checked network status."},
-    {"role": "agent", "content": "It seems like there’s an outage in your area."}
+    {"role": "action", "content": "Agent opened account details."}
   ]
 }
 ```
 
-Ensure this file is placed in the `data/` directory under the name `processed_formatted_conversations.json`.
+- Save your data file as: `data/processed_formatted_conversations.json`
 
-## Installation
+---
 
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/achrefbenammar404/quasi-patterned-conversations-analysis.git
-    ```
-2. Navigate to the project directory:
-    ```sh
-    cd quasi-patterned-conversations-analysis
-    ```
-3. Create and activate a virtual environment:
-    ```sh
-    python3 -m venv venv
-    source venv/bin/activate   # For MacOS/Linux
-    .\venv\Scripts\activate    # For Windows
-    ```
-4. Install the required dependencies:
-    ```sh
-    python -m spacy download en_core_web_md
-    pip install -r requirements.txt
-    ```
+## Run the Pipeline
 
-## Usage
+```bash
+python main.py \
+    --file_path data/processed_formatted_conversations.json \
+    --num_sampled_data 500 \
+    --min_clusters 10 \
+    --max_clusters 30 \
+    --model_name 'sentence-transformers/all-mpnet-base-v2' \
+    --label_model 'open-mixtral-8x22b' \
+    --tau 0.15 \
+    --top_k 2 \
+    --alpha 0.8
+```
 
-1. Ensure the conversation data is placed in the `data/` directory with the expected filename (`processed_formatted_conversations.json`).
-   
-2. Run the analysis using the command line with appropriate arguments:
+---
 
-    ```sh
-    python main.py --num_sampled_data <NUMBER_OF_SAMPLES> --max_clusters <MAX_CLUSTERS> --percentile <PERCENTILE> --model_name <MODEL_NAME> --label_model <LABEL_MODEL> --min_weight <MIN_WEIGHT> --top_k <TOP_K_EDGES> --n_closest <N_CLOSEST_UTTERANCES>
-    ```
+## Advanced Configuration
 
-   Example:
-   
-    ```sh
-    python main.py --num_sampled_data 10 --max_clusters 5 --percentile 75 --model_name 'sentence-transformers/all-MiniLM-L12-v2' --label_model 'open-mixtral-8x22b' --min_weight 0.1 --top_k 1 --n_closest 1
-    ```
+| Parameter            | Description                                      | Default                         |
+|----------------------|--------------------------------------------------|---------------------------------|
+| `--num_sampled_data` | Number of conversations to sample                | 100                             |
+| `--min_clusters`     | Minimum cluster count for elbow method           | 5                               |
+| `--max_clusters`     | Maximum cluster count for elbow method           | 15                              |
+| `--model_name`       | Sentence embedding model                         | 'all-MiniLM-L12-v2'             |
+| `--label_model`      | LLM for labeling dialogue state clusters         | 'open-mixtral-8x22b'            |
+| `--tau`              | Minimum transition probability threshold         | 0.1                             |
+| `--top_k`            | Number of outgoing edges to retain per node      | 1                               |
+| `--alpha`            | Balance between semantic similarity and topology | 1.0                             |
 
-3. Follow the on-screen prompts to select the optimal number of clusters based on the elbow method.
+---
 
-## Configuration Options
+## Citation
 
-- `--num_sampled_data`: Number of sampled data points to process (default: 10).
-- `--max_clusters`: Maximum number of clusters for the elbow method (default: 3).
-- `--percentile`: Percentile for outlier removal (default: 75).
-- `--model_name`: Sentence Transformer model for embedding (default: 'sentence-transformers/all-MiniLM-L12-v2').
-- `--label_model`: Model for labeling clusters by closest utterance (default: 'open-mixtral-8x22b').
-- `--min_weight`: Minimum weight threshold for edges in the conversational graph (default: 0.1).
-- `--top_k`: Number of top edges to keep in the conversational graph (default: 1).
-- `--n_closest`: Number of closest utterances per cluster centroid for intent extraction (default: 1).
+If you use this codebase for your research, please cite:
 
-## Results and Analysis
+```bibtex
+@inproceedings{achref2025conversationalgraph,
+  title={A Computational Approach to Modeling Conversational Systems: Analyzing Large-Scale Quasi-Patterned Dialogue Flows},
+  author={Mohamed Achref Ben Ammar and Mohamed Taha Bennani},
+  conference={IEEE EUROCON 2025 - The 21st International Conference on Smart Technologies},
+  year={2025},
+  publisher={IEEE},
+}
+```
 
-The results include visualizations of t-SNE clusters, histograms of distance distributions, and HTML files for visualizing conversational flows using different graph simplification techniques (Threshold Filtering, Top-K Filtering, and Filter\&Reconnect). The Filter\&Reconnect method provides the most readable and interpretable graphs, effectively highlighting key conversational patterns.
+---
 
-## Acknowledgements
+## Contact
 
-- Uses data from [ABCD v1.1](https://github.com/asappresearch/abcd/blob/master/data/abcd_v1.1.json.gz).
-- The methodologies incorporate advancements in sentence embedding and graph construction techniques.
+For questions, collaborations, or feedback, feel free to reach out:
+
+- **Mohamed Achref Ben Ammar** – [mohamedachref.benammar@insat.ucar.tn](mailto:mohamedachref.benammar@insat.ucar.tn)  
+- **Mohamed Taha Bennani** – [taha.bennani@fst.utm.tn](mailto:taha.bennani@fst.utm.tn)
