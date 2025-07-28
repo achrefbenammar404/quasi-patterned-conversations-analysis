@@ -23,8 +23,6 @@ __pycache__/
 *.html
 
 
-*.png
-
 !output/filter-and-reconnect-graph.png
 !output/Sankey-Plot.png
 

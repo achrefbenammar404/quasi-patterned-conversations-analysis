@@ -2,10 +2,11 @@
 <h3 align="center">Analyzing Large-Scale Quasi-Patterned Dialogue Flows</h3>
 
 <p align="center">
-  <img src="https://utm.rnu.tn/utm/images/utm-og-img.png" alt="FST Logo" width="100"/>
-  <img src="https://insat.rnu.tn/assets/images/logo_c.png" alt="INSAT logo" width="100">
+  <img src="resources/logo_c.png" alt="INSAT logo" width="100">
+  <img src="resources/utm-og-img.png" alt="FST Logo" width="100"/>
+
   <p align = "center">
-    <img src="https://ieeer8.org/wp-content/uploads/2022/03/IEEE-Region-8-Logo.png" alt="IEEE XPLORE logo" width="230">
+    <img src="resources/IEEE-Region-8-Logo.png" alt="IEEE XPLORE logo" width="230">
   </p>
 </p>
 
